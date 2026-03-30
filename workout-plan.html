@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Workout Plan – Corelytics</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080c0f;
+    --surface: #0d1318;
+    --surface2: #111a21;
+    --border: rgba(255,255,255,0.06);
+    --accent: #00e5a0;
+    --accent2: #00b8ff;
+    --accent3: #ff6b35;
+    --accent4: #ffd166;
+    --accent5: #bf7fff;
+    --text: #e8edf0;
+    --muted: #5a6a75;
+    --card-bg: rgba(255,255,255,0.03);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Noise overlay */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 999; opacity: 0.4;
+  }
+
+  .blob { position: fixed; pointer-events: none; z-index: 0; border-radius: 50%; }
+  .blob-1 { top: -200px; left: -150px; width: 700px; height: 700px; background: radial-gradient(circle, rgba(0,229,160,0.06), transparent 70%); }
+  .blob-2 { bottom: -200px; right: -200px; width: 700px; height: 700px; background: radial-gradient(circle, rgba(191,127,255,0.05), transparent 70%); }
+
+  /* NAV */
+  nav {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 20px 6vw;
+    background: rgba(8,12,15,0.88);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo { font-family: 'Syne', sans-serif; font-weight: 800; font-size: 1.5rem; letter-spacing: -0.02em; color: var(--text); text-decoration: none; }
+  .logo span { color: var(--accent); }
+
+  .nav-back { display: flex; align-items: center; gap: 8px; color: var(--muted); text-decoration: none; font-size: 0.875rem; font-weight: 500; transition: color 0.2s; }
+  .nav-back:hover { color: var(--text); }
+  .nav-back svg { width: 16px; height: 16px; }
+
+  /* PAGE */
+  .page {
+    position: relative; z-index: 1;
+    padding: 120px 5vw 80px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  /* HEADER */
+  .page-header { text-align: center; margin-bottom: 56px; animation: fadeUp 0.7s ease both; }
+
+  .page-badge {
+    display: inline-flex; align-items: center; gap: 8px;
+    background: rgba(191,127,255,0.08); border: 1px solid rgba(191,127,255,0.2);
+    border-radius: 100px; padding: 6px 16px;
+    font-size: 0.75rem; font-weight: 600; color: var(--accent5);
+    margin-bottom: 24px; letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  .page-badge .dot { width: 6px; height: 6px; background: var(--accent5); border-radius: 50%; animation: pulse 2s infinite; }
+
+  @keyframes pulse { 0%,100% { opacity:1; transform:scale(1); } 50% { opacity:0.4; transform:scale(0.8); } }
+
+  .page-title { font-family: 'Syne', sans-serif; font-size: clamp(2.4rem,5vw,4rem); font-weight: 800; letter-spacing: -0.04em; line-height: 1.05; }
+  .page-title span { color: var(--accent); }
+  .page-sub { margin-top: 16px; font-size: 1rem; color: var(--muted); font-weight: 300; max-width: 520px; margin-left: auto; margin-right: auto; line-height: 1.75; }
+
+  /* MAIN LAYOUT */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 420px 1fr;
+    gap: 28px;
+    align-items: start;
+  }
+
+  /* INPUT CARD */
+  .input-card {
+    background: var(--card-bg);
+    border: 1.5px solid var(--border);
+    border-top: 3px solid var(--accent);
+    border-radius: 28px;
+    padding: 36px 32px;
+    position: sticky;
+    top: 100px;
+    animation: fadeUp 0.7s 0.1s ease both;
+  }
+
+  .card-section-label {
+    font-size: 0.7rem; font-weight: 700; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 24px;
+  }
+
+  /* Field */
+  .field { margin-bottom: 22px; }
+  .field-label {
+    font-size: 0.78rem; font-weight: 600; color: var(--muted);
+    text-transform: uppercase; letter-spacing: 0.07em;
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 10px;
+  }
+  .field-val { font-family: 'Syne', sans-serif; font-size: 0.95rem; font-weight: 800; color: var(--text); text-transform: none; letter-spacing: 0; }
+
+  input[type="range"] {
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 4px; border-radius: 100px;
+    background: rgba(255,255,255,0.08); outline: none; cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%;
+    background: var(--accent); border: 3px solid var(--bg);
+    box-shadow: 0 0 14px rgba(0,229,160,0.5); cursor: pointer; transition: box-shadow 0.2s;
+  }
+  input[type="range"]::-webkit-slider-thumb:hover { box-shadow: 0 0 22px rgba(0,229,160,0.75); }
+
+  .slider-range { display: flex; justify-content: space-between; font-size: 0.68rem; color: var(--muted); margin-top: 6px; }
+
+  /* Gender toggle */
+  .mini-toggle { display: flex; background: rgba(255,255,255,0.04); border: 1px solid var(--border); border-radius: 100px; padding: 3px; width: fit-content; gap: 2px; margin-bottom: 22px; }
+  .mini-btn { padding: 7px 20px; border-radius: 100px; border: none; background: transparent; color: var(--muted); font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+  .mini-btn.active { background: var(--accent); color: #000; font-weight: 700; }
+
+  /* Select */
+  .styled-select {
+    width: 100%; background: rgba(255,255,255,0.04); border: 1.5px solid var(--border);
+    border-radius: 12px; padding: 11px 14px; color: var(--text);
+    font-family: 'DM Sans', sans-serif; font-size: 0.875rem; outline: none;
+    transition: border-color 0.2s; cursor: pointer; appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235a6a75' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px;
+  }
+  .styled-select option { background: #111a21; }
+  .styled-select:focus { border-color: var(--accent); }
+
+  .field-divider { height: 1px; background: var(--border); margin: 24px 0; }
+
+  /* Generate button */
+  .gen-btn {
+    width: 100%; background: var(--accent); color: #000;
+    font-family: 'DM Sans', sans-serif; font-weight: 800; font-size: 1rem;
+    padding: 16px; border-radius: 100px; border: none; cursor: pointer;
+    margin-top: 28px; transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 0 40px rgba(0,229,160,0.25); letter-spacing: 0.01em;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+  }
+  .gen-btn:hover { transform: translateY(-2px); box-shadow: 0 0 60px rgba(0,229,160,0.45); }
+  .gen-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+  .gen-btn .btn-icon { font-size: 1.1rem; }
+
+  /* Info chips */
+  .info-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+  .chip { display: flex; align-items: center; gap: 6px; font-size: 0.72rem; color: var(--muted); background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 5px 12px; border-radius: 100px; }
+  .chip span { color: var(--accent); font-size: 0.85rem; }
+
+  /* OUTPUT CARD */
+  .output-card {
+    background: var(--card-bg);
+    border: 1.5px solid var(--border);
+    border-radius: 28px;
+    overflow: hidden;
+    animation: fadeUp 0.7s 0.2s ease both;
+    min-height: 500px;
+  }
+
+  /* Placeholder state */
+  .output-placeholder {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 500px; gap: 20px; padding: 40px; text-align: center;
+  }
+
+  .placeholder-icon-wrap {
+    width: 96px; height: 96px; border-radius: 50%;
+    background: rgba(0,229,160,0.06); border: 1.5px solid rgba(0,229,160,0.15);
+    display: flex; align-items: center; justify-content: center; font-size: 2.4rem;
+    animation: float 3s ease-in-out infinite;
+  }
+
+  @keyframes float { 0%,100% { transform:translateY(0); } 50% { transform:translateY(-10px); } }
+
+  .placeholder-title { font-family: 'Syne', sans-serif; font-size: 1.4rem; font-weight: 800; color: var(--text); letter-spacing: -0.03em; }
+  .placeholder-sub { font-size: 0.875rem; color: var(--muted); font-weight: 300; max-width: 300px; line-height: 1.7; }
+
+  .placeholder-steps { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; width: 100%; max-width: 320px; }
+  .step-row { display: flex; align-items: center; gap: 12px; text-align: left; }
+  .step-num { width: 28px; height: 28px; border-radius: 50%; background: rgba(0,229,160,0.1); border: 1px solid rgba(0,229,160,0.2); display: flex; align-items: center; justify-content: center; font-size: 0.72rem; font-weight: 800; color: var(--accent); flex-shrink: 0; }
+  .step-txt { font-size: 0.82rem; color: var(--muted); font-weight: 300; }
+
+  /* Loading state */
+  .output-loading {
+    display: none; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 500px; gap: 24px; padding: 40px; text-align: center;
+  }
+
+  .loader-ring {
+    width: 80px; height: 80px; border-radius: 50%;
+    border: 3px solid rgba(0,229,160,0.1);
+    border-top-color: var(--accent);
+    animation: spin 0.9s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .loading-text { font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 700; color: var(--text); }
+  .loading-sub { font-size: 0.82rem; color: var(--muted); font-weight: 300; max-width: 260px; line-height: 1.6; }
+
+  .loading-steps { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+  .load-step { font-size: 0.78rem; color: var(--muted); display: flex; align-items: center; gap: 8px; }
+  .load-step .ls-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--border); flex-shrink: 0; }
+  .load-step.done   .ls-dot { background: var(--accent); }
+  .load-step.active .ls-dot { background: var(--accent); animation: pulse 1s infinite; }
+
+  /* Result state */
+  .output-result { display: none; flex-direction: column; padding: 0; }
+
+  /* Result Header */
+  .result-header {
+    padding: 28px 32px 24px;
+    border-bottom: 1px solid var(--border);
+    background: linear-gradient(135deg, rgba(0,229,160,0.04), transparent);
+  }
+
+  .result-header-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
+  .result-title { font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 800; color: var(--text); letter-spacing: -0.03em; }
+  .result-subtitle { font-size: 0.82rem; color: var(--muted); margin-top: 4px; font-weight: 300; }
+
+  .result-tags { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 16px; }
+  .rtag { font-size: 0.72rem; font-weight: 600; padding: 4px 12px; border-radius: 100px; }
+  .rtag.green  { background: rgba(0,229,160,0.1);   color: var(--accent);  border: 1px solid rgba(0,229,160,0.2); }
+  .rtag.blue   { background: rgba(0,184,255,0.1);   color: var(--accent2); border: 1px solid rgba(0,184,255,0.2); }
+  .rtag.orange { background: rgba(255,107,53,0.1);  color: var(--accent3); border: 1px solid rgba(255,107,53,0.2); }
+  .rtag.purple { background: rgba(191,127,255,0.1); color: var(--accent5); border: 1px solid rgba(191,127,255,0.2); }
+
+  /* Metrics row */
+  .result-metrics { display: grid; grid-template-columns: repeat(4,1fr); gap: 0; border-bottom: 1px solid var(--border); }
+  .rm { padding: 18px 20px; border-right: 1px solid var(--border); text-align: center; }
+  .rm:last-child { border-right: none; }
+  .rm-val { font-family: 'Syne', sans-serif; font-size: 1.3rem; font-weight: 800; color: var(--accent); letter-spacing: -0.04em; }
+  .rm-lbl { font-size: 0.68rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 4px; }
+
+  /* Plan content */
+  .plan-content { padding: 28px 32px; flex: 1; }
+
+  .ai-output { font-size: 0.875rem; color: var(--text); line-height: 1.8; font-weight: 300; }
+
+  .ai-output h2 {
+    font-family: 'Syne', sans-serif; font-size: 1.1rem; font-weight: 800;
+    color: var(--accent); letter-spacing: -0.02em; margin: 24px 0 12px;
+    padding-bottom: 8px; border-bottom: 1px solid rgba(0,229,160,0.15);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .ai-output h2:first-child { margin-top: 0; }
+
+  .ai-output h3 {
+    font-family: 'Syne', sans-serif; font-size: 0.95rem; font-weight: 700;
+    color: var(--text); margin: 18px 0 8px; letter-spacing: -0.01em;
+  }
+
+  .ai-output p { margin-bottom: 10px; color: var(--muted); }
+
+  .ai-output ul { padding-left: 0; margin: 8px 0 14px; list-style: none; display: flex; flex-direction: column; gap: 6px; }
+
+  .ai-output ul li {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 0.85rem; color: var(--text); line-height: 1.6;
+    padding: 10px 14px;
+    background: rgba(255,255,255,0.02); border: 1px solid var(--border);
+    border-radius: 10px;
+  }
+  .ai-output ul li::before { content: '→'; color: var(--accent); flex-shrink: 0; font-weight: 700; }
+
+  /* Day workout card */
+  .day-block {
+    background: rgba(255,255,255,0.02); border: 1px solid var(--border);
+    border-radius: 16px; padding: 18px 20px; margin-bottom: 12px;
+    transition: border-color 0.2s;
+  }
+  .day-block:hover { border-color: rgba(0,229,160,0.2); }
+
+  .day-block-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  .day-label { font-family: 'Syne', sans-serif; font-size: 0.7rem; font-weight: 800; color: var(--accent); text-transform: uppercase; letter-spacing: 0.1em; background: rgba(0,229,160,0.08); border: 1px solid rgba(0,229,160,0.15); padding: 3px 10px; border-radius: 100px; }
+  .day-name { font-family: 'Syne', sans-serif; font-size: 0.95rem; font-weight: 700; color: var(--text); }
+
+  .exercise-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.04); font-size: 0.82rem; }
+  .exercise-row:last-child { border-bottom: none; padding-bottom: 0; }
+  .ex-name   { color: var(--text); font-weight: 500; }
+  .ex-detail { color: var(--muted); font-size: 0.78rem; }
+
+  /* Regen bar */
+  .regen-bar {
+    padding: 20px 32px;
+    border-top: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between; gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .regen-btn {
+    display: flex; align-items: center; gap: 8px;
+    background: transparent; border: 1.5px solid var(--border);
+    padding: 10px 20px; border-radius: 100px; color: var(--muted);
+    font-family: 'DM Sans', sans-serif; font-size: 0.85rem; font-weight: 500;
+    cursor: pointer; transition: all 0.2s;
+  }
+  .regen-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .plan-tip { font-size: 0.78rem; color: var(--muted); font-weight: 300; }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
+
+  /* Responsive */
+  @media (max-width: 900px) {
+    .main-grid { grid-template-columns: 1fr; }
+    .input-card { position: static; }
+    .result-metrics { grid-template-columns: repeat(2,1fr); }
+    .rm:nth-child(2) { border-right: none; }
+    .rm:nth-child(3) { border-right: 1px solid var(--border); }
+  }
+  @media (max-width: 500px) {
+    .page { padding: 100px 4vw 60px; }
+    .result-metrics { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="index.html" class="logo">Core<span>lytics</span></a>
+  <a href="index.html" class="nav-back">
+    <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10 3L5 8l5 5"/>
+    </svg>
+    Back to Home
+  </a>
+</nav>
+
+<div class="page">
+
+  <!-- HEADER -->
+  <div class="page-header">
+    <div class="page-badge"><div class="dot"></div> AI-Powered · Personalized · Instant</div>
+    <h1 class="page-title">Your <span>AI Workout</span> Plan</h1>
+    <p class="page-sub">Enter your BMI, body fat percentage, and fitness details. Our AI will analyze your body composition and generate a fully personalized workout program built for your exact physiology.</p>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="main-grid">
+
+    <!-- LEFT: INPUT CARD -->
+    <div class="input-card">
+      <div class="card-section-label">Your Body Metrics</div>
+
+      <!-- Gender -->
+      <div style="margin-bottom:22px;">
+        <div class="field-label" style="margin-bottom:10px;">Biological Sex</div>
+        <div class="mini-toggle">
+          <button class="mini-btn active" id="g-male" onclick="setGender('male')">♂ Male</button>
+          <button class="mini-btn" id="g-female" onclick="setGender('female')">♀ Female</button>
+        </div>
+      </div>
+
+      <!-- Age -->
+      <div class="field">
+        <div class="field-label">Age <span class="field-val" id="age-val">28 yrs</span></div>
+        <input type="range" id="age" min="15" max="70" value="28" oninput="syncVal('age-val', this.value, ' yrs')">
+        <div class="slider-range"><span>15</span><span>42</span><span>70 yrs</span></div>
+      </div>
+
+      <!-- BMI -->
+      <div class="field">
+        <div class="field-label">BMI Score <span class="field-val" id="bmi-val">22.4</span></div>
+        <input type="range" id="bmi" min="14" max="45" step="0.1" value="22.4" oninput="syncVal('bmi-val', parseFloat(this.value).toFixed(1), '')">
+        <div class="slider-range"><span>14</span><span>29</span><span>45</span></div>
+      </div>
+
+      <!-- Body Fat -->
+      <div class="field">
+        <div class="field-label">Body Fat % <span class="field-val" id="bf-val">18%</span></div>
+        <input type="range" id="bf" min="3" max="50" value="18" oninput="syncVal('bf-val', this.value, '%')">
+        <div class="slider-range"><span>3%</span><span>26%</span><span>50%</span></div>
+      </div>
+
+      <div class="field-divider"></div>
+      <div class="card-section-label">Training Preferences</div>
+
+      <!-- Goal -->
+      <div class="field">
+        <div class="field-label" style="margin-bottom:8px;">Primary Goal</div>
+        <select class="styled-select" id="goal">
+          <option value="fat_loss">🔥 Fat Loss — Burn fat, stay lean</option>
+          <option value="muscle_gain" selected>💪 Muscle Gain — Build size &amp; strength</option>
+          <option value="recomp">⚡ Body Recomposition — Lose fat &amp; gain muscle</option>
+          <option value="endurance">🏃 Endurance — Improve stamina &amp; cardio</option>
+          <option value="athletic">🎯 Athletic Performance — Speed, power, agility</option>
+          <option value="maintenance">⚖️ Maintenance — Stay fit &amp; healthy</option>
+        </select>
+      </div>
+
+      <!-- Experience -->
+      <div class="field">
+        <div class="field-label" style="margin-bottom:8px;">Experience Level</div>
+        <select class="styled-select" id="level">
+          <option value="beginner">🌱 Beginner — Less than 1 year</option>
+          <option value="intermediate" selected>🔄 Intermediate — 1–3 years</option>
+          <option value="advanced">🏆 Advanced — 3+ years</option>
+        </select>
+      </div>
+
+      <!-- Equipment -->
+      <div class="field">
+        <div class="field-label" style="margin-bottom:8px;">Available Equipment</div>
+        <select class="styled-select" id="equipment">
+          <option value="full_gym" selected>🏋️ Full Gym — All machines &amp; free weights</option>
+          <option value="home_weights">🏠 Home — Dumbbells &amp; resistance bands</option>
+          <option value="bodyweight">🤸 Bodyweight Only — No equipment</option>
+          <option value="calisthenics">🌳 Calisthenics — Pull-up bars &amp; outdoor</option>
+        </select>
+      </div>
+
+      <!-- Days per week -->
+      <div class="field">
+        <div class="field-label">Days Per Week <span class="field-val" id="days-val">4 days</span></div>
+        <input type="range" id="days" min="2" max="6" value="4" oninput="syncVal('days-val', this.value, ' days')">
+        <div class="slider-range"><span>2</span><span>4</span><span>6 days</span></div>
+      </div>
+
+      <!-- Generate -->
+      <button class="gen-btn" id="gen-btn" onclick="generatePlan()">
+        <span class="btn-icon">🤖</span> Generate My Workout Plan
+      </button>
+
+      <div class="info-chips">
+        <div class="chip"><span>✓</span> Powered by Claude AI</div>
+        <div class="chip"><span>✓</span> Personalized to your body</div>
+        <div class="chip"><span>✓</span> Free to generate</div>
+      </div>
+    </div>
+
+    <!-- RIGHT: OUTPUT CARD -->
+    <div class="output-card" id="output-card">
+
+      <!-- Placeholder -->
+      <div class="output-placeholder" id="state-placeholder">
+        <div class="placeholder-icon-wrap">🏋️</div>
+        <div class="placeholder-title">Ready to Build Your Plan</div>
+        <p class="placeholder-sub">Fill in your body metrics and training preferences, then hit Generate to get your personalized AI workout program.</p>
+        <div class="placeholder-steps">
+          <div class="step-row"><div class="step-num">1</div><div class="step-txt">Enter your BMI and body fat percentage</div></div>
+          <div class="step-row"><div class="step-num">2</div><div class="step-txt">Choose your goal, experience, and equipment</div></div>
+          <div class="step-row"><div class="step-num">3</div><div class="step-txt">AI analyzes your data and builds your plan</div></div>
+          <div class="step-row"><div class="step-num">4</div><div class="step-txt">Get your personalized weekly workout split</div></div>
+        </div>
+      </div>
+
+      <!-- Loading -->
+      <div class="output-loading" id="state-loading">
+        <div class="loader-ring"></div>
+        <div class="loading-text">Analyzing Your Body Data...</div>
+        <p class="loading-sub">Our AI is processing your metrics and building a plan optimized for your exact physiology.</p>
+        <div class="loading-steps">
+          <div class="load-step active" id="ls-1"><div class="ls-dot"></div> Analyzing BMI &amp; body fat percentage</div>
+          <div class="load-step" id="ls-2"><div class="ls-dot"></div> Calculating optimal training intensity</div>
+          <div class="load-step" id="ls-3"><div class="ls-dot"></div> Selecting exercises for your goal</div>
+          <div class="load-step" id="ls-4"><div class="ls-dot"></div> Generating your weekly split</div>
+          <div class="load-step" id="ls-5"><div class="ls-dot"></div> Finalizing recovery &amp; nutrition tips</div>
+        </div>
+      </div>
+
+      <!-- Result -->
+      <div class="output-result" id="state-result">
+        <div class="result-header">
+          <div class="result-header-top">
+            <div>
+              <div class="result-title" id="res-title">AI Workout Plan</div>
+              <div class="result-subtitle" id="res-subtitle">Personalized based on your body composition</div>
+            </div>
+          </div>
+          <div class="result-tags" id="res-tags"></div>
+        </div>
+
+        <div class="result-metrics">
+          <div class="rm"><div class="rm-val" id="rm-days">—</div><div class="rm-lbl">Days/Week</div></div>
+          <div class="rm"><div class="rm-val" id="rm-dur">—</div><div class="rm-lbl">Min/Session</div></div>
+          <div class="rm"><div class="rm-val" id="rm-intensity">—</div><div class="rm-lbl">Intensity</div></div>
+          <div class="rm"><div class="rm-val" id="rm-focus">—</div><div class="rm-lbl">Focus</div></div>
+        </div>
+
+        <div class="plan-content">
+          <div class="ai-output" id="ai-output"></div>
+        </div>
+
+        <div class="regen-bar">
+          <div class="plan-tip">💡 Results are AI-generated and based on your inputs. Consult a trainer for medical advice.</div>
+          <button class="regen-btn" onclick="generatePlan()">↻ Regenerate Plan</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  // ===== STATE =====
+  let gender = 'male';
+
+  // ===== UTILS =====
+  function setGender(g) {
+    gender = g;
+    document.getElementById('g-male').classList.toggle('active', g === 'male');
+    document.getElementById('g-female').classList.toggle('active', g === 'female');
+  }
+
+  function syncVal(id, val, suffix) {
+    document.getElementById(id).textContent = val + suffix;
+  }
+
+  function setState(state) {
+    document.getElementById('state-placeholder').style.display = state === 'placeholder' ? 'flex' : 'none';
+    document.getElementById('state-loading').style.display     = state === 'loading'     ? 'flex' : 'none';
+    document.getElementById('state-result').style.display      = state === 'result'      ? 'flex' : 'none';
+  }
+
+  // ===== LOADING STEPS ANIMATION =====
+  function animateLoadingSteps(cb) {
+    const steps = ['ls-1','ls-2','ls-3','ls-4','ls-5'];
+    steps.forEach(s => {
+      document.getElementById(s).classList.remove('active','done');
+    });
+    let i = 0;
+    function next() {
+      if (i > 0) {
+        document.getElementById(steps[i - 1]).classList.remove('active');
+        document.getElementById(steps[i - 1]).classList.add('done');
+      }
+      if (i < steps.length) {
+        document.getElementById(steps[i]).classList.add('active');
+        i++;
+        setTimeout(next, 600);
+      } else {
+        setTimeout(cb, 200);
+      }
+    }
+    next();
+  }
+
+  // ===== GENERATE PLAN =====
+  async function generatePlan() {
+    const bmi       = parseFloat(document.getElementById('bmi').value).toFixed(1);
+    const bf        = document.getElementById('bf').value;
+    const age       = document.getElementById('age').value;
+    const goal      = document.getElementById('goal').value;
+    const level     = document.getElementById('level').value;
+    const equipment = document.getElementById('equipment').value;
+    const days      = document.getElementById('days').value;
+
+    const btn = document.getElementById('gen-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="btn-icon">⏳</span> Generating...';
+
+    setState('loading');
+
+    const goalMap = {
+      fat_loss: 'Fat Loss', muscle_gain: 'Muscle Gain', recomp: 'Body Recomposition',
+      endurance: 'Endurance', athletic: 'Athletic Performance', maintenance: 'Maintenance'
+    };
+    const levelMap = { beginner: 'Beginner', intermediate: 'Intermediate', advanced: 'Advanced' };
+    const equipMap = {
+      full_gym:     'Full Gym (machines + free weights)',
+      home_weights: 'Home (dumbbells + resistance bands)',
+      bodyweight:   'Bodyweight only (no equipment)',
+      calisthenics: 'Calisthenics (pull-up bars + outdoor)'
+    };
+
+    const prompt = `You are an expert certified personal trainer and exercise physiologist. Generate a detailed, personalized workout plan.
+
+User Profile:
+- Gender: ${gender}
+- Age: ${age} years
+- BMI: ${bmi}
+- Body Fat: ${bf}%
+- Goal: ${goalMap[goal]}
+- Level: ${levelMap[level]}
+- Equipment: ${equipMap[equipment]}
+- Days/Week: ${days}
+
+Respond in this EXACT format (no deviations):
+
+## 📊 Body Analysis
+[2 sentences analyzing BMI ${bmi} and body fat ${bf}% for training]
+
+## 🎯 Training Strategy
+[2 sentences on optimal strategy for their profile]
+
+## 📅 Weekly Workout Split
+**DAY 1 — [Focus]** [Strength]
+- [Exercise] — [sets] sets × [reps] reps (rest: [sec]s)
+- [Exercise] — [sets] sets × [reps] reps (rest: [sec]s)
+- [Exercise] — [sets] sets × [reps] reps (rest: [sec]s)
+- [Exercise] — [sets] sets × [reps] reps (rest: [sec]s)
+
+[repeat for each training day, use DAY 2, DAY 3, etc. Include rest days as DAY X — Rest Day [Recovery]]
+
+## 🍽️ Nutrition Guidance
+- [tip 1]
+- [tip 2]
+- [tip 3]
+- [tip 4]
+
+## ⚡ Recovery Protocol
+- [tip 1]
+- [tip 2]
+- [tip 3]
+
+## 📈 Progress Milestones
+- Week 4: [milestone]
+- Week 8: [milestone]
+- Week 12: [milestone]`;
+
+    // Fire API call immediately, animate steps in parallel
+    const apiPromise = fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 2000,
+        messages: [{ role: "user", content: prompt }]
+      })
+    });
+
+    animateLoadingSteps(async () => {
+      try {
+        const response = await apiPromise;
+        const data     = await response.json();
+        const text     = data.content?.[0]?.text || '';
+
+        if (!text) throw new Error('Empty response');
+
+        populateResult(text, { bmi, bf, age, gender, goal, level, equipment, days, goalMap, levelMap });
+        setState('result');
+
+        if (window.innerWidth < 900) {
+          document.getElementById('output-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+      } catch (err) {
+        console.error(err);
+        const fallback = buildFallback({ bmi, bf, age, gender, goal, level, days, goalMap, levelMap, equipMap, equipment });
+        populateResult(fallback, { bmi, bf, age, gender, goal, level, equipment, days, goalMap, levelMap });
+        setState('result');
+      }
+
+      btn.disabled = false;
+      btn.innerHTML = '<span class="btn-icon">🤖</span> Generate My Workout Plan';
+    });
+  }
+
+  // ===== FALLBACK PLAN =====
+  function buildFallback({ bmi, bf, goal, level, days, goalMap, levelMap }) {
+    const g = goalMap[goal];
+    const l = levelMap[level];
+    return `## 📊 Body Analysis
+With a BMI of ${bmi} and ${bf}% body fat, your body composition indicates a ${parseFloat(bf) < 20 ? 'lean, athletic' : parseFloat(bf) < 28 ? 'average' : 'higher body fat'} profile. This means your training should prioritize ${g.toLowerCase()} with appropriate intensity for a ${l.toLowerCase()}.
+
+## 🎯 Training Strategy
+Focus on progressive overload with ${parseInt(days)} training days per week, alternating muscle groups to maximize recovery. ${goal === 'fat_loss' ? 'Combine strength training with metabolic conditioning to boost fat burning.' : goal === 'muscle_gain' ? 'Prioritize compound lifts with 3–5 min rest to maximize muscle protein synthesis.' : 'Balance strength and cardio work across your weekly sessions.'}
+
+## 📅 Weekly Workout Split
+**DAY 1 — Chest & Triceps** [Strength]
+- Bench Press — 4 sets × 8 reps (rest: 90s)
+- Incline Dumbbell Press — 3 sets × 10 reps (rest: 75s)
+- Cable Fly — 3 sets × 12 reps (rest: 60s)
+- Tricep Pushdown — 3 sets × 12 reps (rest: 60s)
+
+**DAY 2 — Back & Biceps** [Strength]
+- Deadlift — 4 sets × 6 reps (rest: 120s)
+- Pull-Ups — 3 sets × 8 reps (rest: 90s)
+- Seated Cable Row — 3 sets × 10 reps (rest: 75s)
+- Barbell Curl — 3 sets × 12 reps (rest: 60s)
+
+**DAY 3 — Rest / Active Recovery** [Recovery]
+- Light walk or 20 min stretching
+- Foam rolling for 10 minutes
+- Mobility work: hip flexors, thoracic spine
+
+**DAY 4 — Legs & Glutes** [Strength]
+- Barbell Squat — 4 sets × 8 reps (rest: 120s)
+- Romanian Deadlift — 3 sets × 10 reps (rest: 90s)
+- Leg Press — 3 sets × 12 reps (rest: 75s)
+- Calf Raises — 4 sets × 15 reps (rest: 45s)
+
+**DAY 5 — Shoulders & Core** [Strength]
+- Overhead Press — 4 sets × 8 reps (rest: 90s)
+- Lateral Raises — 3 sets × 15 reps (rest: 45s)
+- Face Pulls — 3 sets × 15 reps (rest: 45s)
+- Plank — 3 sets × 60 seconds (rest: 45s)
+
+## 🍽️ Nutrition Guidance
+- Eat ${goal === 'fat_loss' ? 'in a 300–500 kcal daily deficit' : goal === 'muscle_gain' ? 'in a 200–300 kcal daily surplus' : 'at your TDEE (maintenance calories)'}
+- Target 1.6–2.2g of protein per kg of bodyweight daily
+- Prioritize whole foods: lean meats, vegetables, complex carbs, healthy fats
+- Stay hydrated — aim for 2.5–3L of water per day
+
+## ⚡ Recovery Protocol
+- Sleep 7–9 hours per night for optimal muscle repair and hormone balance
+- Use foam rolling and dynamic stretching on rest days
+- Take at least 1–2 full rest days per week to prevent overtraining
+
+## 📈 Progress Milestones
+- Week 4: Establish consistent workout habit, increase all lifts by 5–10%
+- Week 8: Visible body composition change, significant strength improvements
+- Week 12: ${goal === 'fat_loss' ? '3–5 kg of fat lost' : goal === 'muscle_gain' ? '1–2 kg of lean muscle added' : 'Improved fitness level and visible physique change'}`;
+  }
+
+  // ===== POPULATE RESULT =====
+  function populateResult(text, d) {
+    const { bmi, bf, days, goal, level, goalMap, levelMap } = d;
+
+    document.getElementById('res-title').textContent    = `${goalMap[goal]} Workout Plan`;
+    document.getElementById('res-subtitle').textContent = `Personalized for BMI ${bmi} · ${bf}% Body Fat · ${levelMap[level]}`;
+
+    const tagData = [
+      { label: goalMap[goal],   cls: 'green'  },
+      { label: levelMap[level], cls: 'blue'   },
+      { label: `${days} Days/Week`, cls: 'orange' },
+      { label: 'AI Generated',  cls: 'purple' },
+    ];
+    document.getElementById('res-tags').innerHTML = tagData
+      .map(t => `<span class="rtag ${t.cls}">${t.label}</span>`)
+      .join('');
+
+    const intensityMap = { beginner: 'Moderate', intermediate: 'High', advanced: 'Max' };
+    const durMap       = { beginner: '40–50', intermediate: '50–65', advanced: '60–75' };
+    const focusMap     = {
+      fat_loss: 'Burn 🔥', muscle_gain: 'Build 💪', recomp: 'Recomp ⚡',
+      endurance: 'Cardio 🏃', athletic: 'Power 🎯', maintenance: 'Health ✅'
+    };
+
+    document.getElementById('rm-days').textContent      = days;
+    document.getElementById('rm-dur').textContent       = durMap[level]      || '50–60';
+    document.getElementById('rm-intensity').textContent = intensityMap[level] || 'High';
+    document.getElementById('rm-focus').textContent     = focusMap[goal]     || 'Fitness';
+
+    document.getElementById('ai-output').innerHTML = renderMarkdown(text);
+  }
+
+  // ===== MARKDOWN RENDERER =====
+  function renderMarkdown(text) {
+    const lines = text.split('\n');
+    let html = '';
+    let inList = false;
+    let inDayBlock = false;
+
+    for (let i = 0; i < lines.length; i++) {
+      let line = lines[i].trim();
+
+      if (!line) {
+        if (inList)     { html += '</ul>'; inList = false; }
+        if (inDayBlock) { html += '</div>'; inDayBlock = false; }
+        continue;
+      }
+
+      // H2 section header
+      if (line.startsWith('## ')) {
+        if (inList)     { html += '</ul>'; inList = false; }
+        if (inDayBlock) { html += '</div>'; inDayBlock = false; }
+        html += `<h2>${line.slice(3)}</h2>`;
+        continue;
+      }
+
+      // Day block header: **DAY X — Title** [Type]
+      const dayMatch = line.match(/^\*\*DAY\s+(\d+)\s*[–—-]\s*(.+?)\*\*\s*\[(.+?)\]/i)
+                    || line.match(/^\*\*DAY\s+(\d+)\s*[–—-]\s*(.+?)\*\*/i);
+      if (dayMatch) {
+        if (inList)     { html += '</ul>'; inList = false; }
+        if (inDayBlock) { html += '</div>'; inDayBlock = false; }
+
+        const dayNum   = dayMatch[1];
+        const dayTitle = dayMatch[2]?.trim() || '';
+        const dayType  = dayMatch[3]?.trim() || '';
+        const typeColors = {
+          Strength: 'rtag green', Cardio: 'rtag blue', HIIT: 'rtag orange',
+          Recovery: 'rtag purple', Rest: 'rtag purple', 'Active Recovery': 'rtag purple'
+        };
+        const cls = typeColors[dayType] || 'rtag green';
+
+        html += `<div class="day-block"><div class="day-block-header"><span class="day-label">DAY ${dayNum}</span><span class="day-name">${dayTitle}</span>${dayType ? `<span class="${cls}" style="margin-left:auto;">${dayType}</span>` : ''}</div>`;
+        inDayBlock = true;
+        continue;
+      }
+
+      // Exercise row inside day block
+      if (inDayBlock && (line.startsWith('- ') || line.startsWith('• '))) {
+        const ex     = line.replace(/^[-•]\s+/, '');
+        const parts  = ex.split(/\s*[—–-]{1,2}\s*/);
+        const exName = parts[0]?.trim() || ex;
+        const exDet  = parts.slice(1).join(' — ').trim();
+        html += `<div class="exercise-row"><span class="ex-name">${exName}</span><span class="ex-detail">${exDet}</span></div>`;
+        continue;
+      }
+
+      // Generic bullet (outside day block)
+      if (line.startsWith('- ') || line.startsWith('• ')) {
+        if (inDayBlock) { html += '</div>'; inDayBlock = false; }
+        if (!inList)    { html += '<ul>'; inList = true; }
+        html += `<li>${line.replace(/^[-•]\s+/, '')}</li>`;
+        continue;
+      }
+
+      // Close open structures before plain paragraph
+      if (inList)     { html += '</ul>'; inList = false; }
+      if (inDayBlock) { html += '</div>'; inDayBlock = false; }
+
+      // Bold inline
+      line = line.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+      html += `<p>${line}</p>`;
+    }
+
+    if (inList)     html += '</ul>';
+    if (inDayBlock) html += '</div>';
+    return html;
+  }
+
+  // ===== INIT =====
+  window.addEventListener('DOMContentLoaded', () => {
+    setState('loading');
+    setTimeout(() => generatePlan(), 80);
+  });
+</script>
+</body>
+</html>

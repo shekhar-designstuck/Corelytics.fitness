@@ -1,0 +1,1468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Features &amp; Calculators – Corelytics</title>
+
+  <!-- Fonts -->
+  <link
+    href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap"
+    rel="stylesheet"
+  />
+
+  <style>
+    /* ============================================================
+       DESIGN TOKENS
+    ============================================================ */
+    :root {
+      --bg:        #080c0f;
+      --surface:   #0d1318;
+      --surface2:  #111a21;
+      --border:    rgba(255, 255, 255, 0.06);
+      --card-bg:   rgba(255, 255, 255, 0.03);
+
+      /* Accent palette */
+      --accent:    #00e5a0; /* green  – primary brand */
+      --accent2:   #00b8ff; /* blue   – body fat */
+      --accent3:   #ff6b35; /* orange – calories */
+      --accent4:   #ffd166; /* yellow – macros   */
+      --accent5:   #bf7fff; /* purple – BMR      */
+
+      /* Typography */
+      --text:      #e8edf0;
+      --muted:     #5a6a75;
+
+      /* Spacing scale */
+      --sp-xs:  4px;
+      --sp-sm:  8px;
+      --sp-md:  16px;
+      --sp-lg:  24px;
+      --sp-xl:  40px;
+    }
+
+    /* ============================================================
+       RESET & BASE
+    ============================================================ */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── Noise texture overlay ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 999;
+      opacity: 0.4;
+    }
+
+    /* ============================================================
+       AMBIENT BLOBS (decorative background glows)
+    ============================================================ */
+    .blob {
+      position: fixed;
+      pointer-events: none;
+      z-index: 0;
+      border-radius: 50%;
+    }
+
+    .blob-1 {
+      top: -200px; left: -200px;
+      width: 700px; height: 700px;
+      background: radial-gradient(circle, rgba(0, 229, 160, 0.05), transparent 70%);
+    }
+
+    .blob-2 {
+      bottom: -300px; right: -200px;
+      width: 800px; height: 800px;
+      background: radial-gradient(circle, rgba(0, 184, 255, 0.04), transparent 70%);
+    }
+
+    .blob-3 {
+      top: 40%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 600px; height: 400px;
+      background: radial-gradient(ellipse, rgba(191, 127, 255, 0.03), transparent 70%);
+    }
+
+    /* ============================================================
+       NAVIGATION
+    ============================================================ */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 20px 6vw;
+      background: rgba(8, 12, 15, 0.88);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo {
+      font-family: 'Syne', sans-serif;
+      font-weight: 800;
+      font-size: 1.5rem;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      text-decoration: none;
+    }
+
+    .logo span { color: var(--accent); }
+
+    .nav-back {
+      display: flex;
+      align-items: center;
+      gap: var(--sp-sm);
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+
+    .nav-back:hover { color: var(--text); }
+    .nav-back svg   { width: 16px; height: 16px; }
+
+    /* ============================================================
+       PAGE WRAPPER
+    ============================================================ */
+    .page {
+      position: relative;
+      z-index: 1;
+      padding: 110px 5vw 80px;
+    }
+
+    /* ============================================================
+       PAGE HEADER
+    ============================================================ */
+    .page-header {
+      text-align: center;
+      padding: 50px 0 70px;
+      animation: fadeUp 0.7s ease both;
+    }
+
+    .page-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--sp-sm);
+      background: rgba(0, 229, 160, 0.08);
+      border: 1px solid rgba(0, 229, 160, 0.2);
+      border-radius: 100px;
+      padding: 6px 16px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--accent);
+      margin-bottom: var(--sp-lg);
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .page-badge .dot {
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    .page-title {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2.2rem, 5vw, 4rem);
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      line-height: 1.05;
+      color: var(--text);
+    }
+
+    .page-title span { color: var(--accent); }
+
+    .page-sub {
+      margin-top: var(--sp-md);
+      font-size: 1rem;
+      color: var(--muted);
+      font-weight: 300;
+      max-width: 520px;
+      margin-left: auto;
+      margin-right: auto;
+      line-height: 1.75;
+    }
+
+    /* ============================================================
+       CALCULATOR TAB SELECTOR
+    ============================================================ */
+    .calc-tabs {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 52px;
+      flex-wrap: wrap;
+      animation: fadeUp 0.7s 0.1s ease both;
+    }
+
+    .tab-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 24px;
+      border-radius: 100px;
+      background: var(--card-bg);
+      border: 1.5px solid var(--border);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.25s;
+      white-space: nowrap;
+    }
+
+    .tab-btn .tab-icon { font-size: 1.1rem; }
+
+    .tab-btn:hover {
+      border-color: rgba(255, 255, 255, 0.14);
+      color: var(--text);
+    }
+
+    .tab-btn.active { color: #000; font-weight: 700; }
+
+    .tab-btn[data-tab="bodyfat"].active {
+      background: var(--accent2);
+      border-color: var(--accent2);
+      box-shadow: 0 0 30px rgba(0, 184, 255, 0.25);
+    }
+
+    .tab-btn[data-tab="calories"].active {
+      background: var(--accent3);
+      border-color: var(--accent3);
+      box-shadow: 0 0 30px rgba(255, 107, 53, 0.25);
+    }
+
+    .tab-btn[data-tab="bmr"].active {
+      background: var(--accent5);
+      border-color: var(--accent5);
+      box-shadow: 0 0 30px rgba(191, 127, 255, 0.25);
+    }
+
+    /* ============================================================
+       THREE-COLUMN CALCULATOR GRID
+    ============================================================ */
+    .three-col {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--sp-lg);
+      max-width: 1280px;
+      margin: 0 auto;
+      animation: fadeUp 0.7s 0.2s ease both;
+    }
+
+    /* ── Individual calculator card ── */
+    .calc-col {
+      background: var(--card-bg);
+      border: 1.5px solid var(--border);
+      border-radius: 28px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      transition: border-color 0.3s, transform 0.3s;
+      position: relative;
+    }
+
+    .calc-col:hover { transform: translateY(-4px); }
+
+    /* Per-calculator color accents */
+    .calc-col.col-bf  { border-top: 3px solid var(--accent2); }
+    .calc-col.col-cal { border-top: 3px solid var(--accent3); }
+    .calc-col.col-bmr { border-top: 3px solid var(--accent5); }
+
+    .calc-col.col-bf:hover  { border-color: var(--accent2); border-top-width: 3px; }
+    .calc-col.col-cal:hover { border-color: var(--accent3); border-top-width: 3px; }
+    .calc-col.col-bmr:hover { border-color: var(--accent5); border-top-width: 3px; }
+
+    /* ── Card header ── */
+    .col-header {
+      padding: 28px 28px 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .col-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.4rem;
+      flex-shrink: 0;
+    }
+
+    .col-bf  .col-icon { background: rgba(0, 184, 255, 0.1);  border: 1px solid rgba(0, 184, 255, 0.2);  }
+    .col-cal .col-icon { background: rgba(255, 107, 53, 0.1); border: 1px solid rgba(255, 107, 53, 0.2); }
+    .col-bmr .col-icon { background: rgba(191, 127, 255, 0.1);border: 1px solid rgba(191, 127, 255, 0.2);}
+
+    .col-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.05rem;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.02em;
+      line-height: 1.2;
+    }
+
+    .col-subtitle {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 4px;
+      font-weight: 300;
+      line-height: 1.5;
+    }
+
+    /* ── Card form body ── */
+    .col-body {
+      padding: var(--sp-lg) 28px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    /* ============================================================
+       FORM CONTROLS
+    ============================================================ */
+
+    /* Field wrapper */
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: var(--sp-sm);
+    }
+
+    .field-label {
+      font-size: 0.74rem;
+      font-weight: 600;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    /* Live value display inside label */
+    .field-label .fv {
+      font-family: 'Syne', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text);
+      text-transform: none;
+      letter-spacing: 0;
+    }
+
+    /* Range slider */
+    input[type="range"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 4px;
+      border-radius: 100px;
+      background: rgba(255, 255, 255, 0.08);
+      outline: none;
+      cursor: pointer;
+    }
+
+    /* Slider thumbs – per-calculator colour */
+    .col-bf  input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--accent2);
+      border: 3px solid var(--bg);
+      box-shadow: 0 0 10px rgba(0, 184, 255, 0.5);
+      cursor: pointer;
+    }
+
+    .col-cal input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--accent3);
+      border: 3px solid var(--bg);
+      box-shadow: 0 0 10px rgba(255, 107, 53, 0.5);
+      cursor: pointer;
+    }
+
+    .col-bmr input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 18px; height: 18px;
+      border-radius: 50%;
+      background: var(--accent5);
+      border: 3px solid var(--bg);
+      box-shadow: 0 0 10px rgba(191, 127, 255, 0.5);
+      cursor: pointer;
+    }
+
+    .slider-range {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.68rem;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    /* Gender toggle */
+    .mini-toggle {
+      display: flex;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      padding: 3px;
+      width: fit-content;
+      gap: 2px;
+    }
+
+    .mini-btn {
+      padding: 6px 18px;
+      border-radius: 100px;
+      border: none;
+      background: transparent;
+      color: var(--muted);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .col-bf  .mini-btn.active { background: var(--accent2); color: #000; font-weight: 700; }
+    .col-cal .mini-btn.active { background: var(--accent3); color: #fff; font-weight: 700; }
+    .col-bmr .mini-btn.active { background: var(--accent5); color: #000; font-weight: 700; }
+
+    /* Select dropdown */
+    .goal-select {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1.5px solid var(--border);
+      border-radius: 12px;
+      padding: 10px 36px 10px 14px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.875rem;
+      cursor: pointer;
+      outline: none;
+      width: 100%;
+      transition: border-color 0.2s;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235a6a75' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 14px center;
+    }
+
+    .goal-select option           { background: #111a21; }
+    .col-cal .goal-select:focus   { border-color: var(--accent3); }
+    .col-bmr .goal-select:focus   { border-color: var(--accent5); }
+
+    /* Calculate button */
+    .col-calc-btn {
+      width: 100%;
+      font-family: 'DM Sans', sans-serif;
+      font-weight: 700;
+      font-size: 0.9rem;
+      padding: 13px;
+      border-radius: 100px;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s, opacity 0.2s;
+      letter-spacing: 0.01em;
+      margin-top: auto;
+    }
+
+    .col-bf  .col-calc-btn { background: var(--accent2); color: #000; box-shadow: 0 0 28px rgba(0, 184, 255, 0.2);  }
+    .col-cal .col-calc-btn { background: var(--accent3); color: #fff; box-shadow: 0 0 28px rgba(255, 107, 53, 0.2); }
+    .col-bmr .col-calc-btn { background: var(--accent5); color: #000; box-shadow: 0 0 28px rgba(191, 127, 255, 0.2);}
+
+    .col-calc-btn:hover { transform: translateY(-2px); opacity: 0.9; }
+
+    /* ============================================================
+       RESULT PANEL
+    ============================================================ */
+    .col-result {
+      background: rgba(255, 255, 255, 0.02);
+      border-top: 1px solid var(--border);
+      padding: var(--sp-lg) 28px;
+      display: none;
+      flex-direction: column;
+      gap: var(--sp-md);
+      animation: fadeUp 0.4s ease both;
+    }
+
+    .col-result.show { display: flex; }
+
+    .result-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    /* Large metric number */
+    .big-result {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .big-result .br-num {
+      font-family: 'Syne', sans-serif;
+      font-size: 3rem;
+      font-weight: 800;
+      letter-spacing: -0.05em;
+      line-height: 1;
+    }
+
+    .big-result .br-unit {
+      font-size: 1rem;
+      font-weight: 500;
+      color: var(--muted);
+    }
+
+    .col-bf  .br-num { color: var(--accent2); }
+    .col-cal .br-num { color: var(--accent3); }
+    .col-bmr .br-num { color: var(--accent5); }
+
+    /* Category badge */
+    .res-badge {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 100px;
+      font-size: 0.78rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    /* Mini metric tiles (2-up or 3-up grid) */
+    .mini-metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .mini-m {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .mini-m .mm-val {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.1rem;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+    }
+
+    .mini-m .mm-lbl {
+      font-size: 0.68rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-top: 3px;
+    }
+
+    .col-bf  .mm-val { color: var(--accent2); }
+    .col-cal .mm-val { color: var(--accent3); }
+    .col-bmr .mm-val { color: var(--accent5); }
+
+    /* Horizontal bar breakdown */
+    .bb-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: var(--sp-sm);
+      font-size: 0.78rem;
+    }
+
+    .bb-label { color: var(--muted); min-width: 80px; }
+
+    .bb-track {
+      flex: 1;
+      height: 5px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 100px;
+      overflow: hidden;
+    }
+
+    .bb-fill {
+      height: 100%;
+      border-radius: 100px;
+      transition: width 0.8s cubic-bezier(0.34, 1.2, 0.64, 1);
+    }
+
+    .bb-val {
+      color: var(--text);
+      font-weight: 600;
+      min-width: 52px;
+      text-align: right;
+    }
+
+    /* Insight tip box */
+    .tip-box {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.6;
+      font-weight: 300;
+      display: flex;
+      gap: 10px;
+      align-items: flex-start;
+    }
+
+    .tip-box .tip-icon {
+      font-size: 0.9rem;
+      flex-shrink: 0;
+      margin-top: 1px;
+    }
+
+    /* ============================================================
+       COMPARE SECTION
+    ============================================================ */
+    .compare-section {
+      max-width: 1280px;
+      margin: 60px auto 0;
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: var(--sp-xl);
+      animation: fadeUp 0.7s 0.35s ease both;
+    }
+
+    .compare-title {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.3rem;
+      font-weight: 800;
+      color: var(--text);
+      letter-spacing: -0.03em;
+      margin-bottom: var(--sp-sm);
+    }
+
+    .compare-sub {
+      font-size: 0.875rem;
+      color: var(--muted);
+      font-weight: 300;
+      margin-bottom: 32px;
+    }
+
+    .compare-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .compare-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: var(--sp-lg);
+      transition: border-color 0.2s;
+    }
+
+    .compare-card.bf-card  { border-top: 2px solid var(--accent2); }
+    .compare-card.cal-card { border-top: 2px solid var(--accent3); }
+    .compare-card.bmr-card { border-top: 2px solid var(--accent5); }
+
+    .compare-card.bf-card:hover  { border-color: var(--accent2); border-top-width: 2px; }
+    .compare-card.cal-card:hover { border-color: var(--accent3); border-top-width: 2px; }
+    .compare-card.bmr-card:hover { border-color: var(--accent5); border-top-width: 2px; }
+
+    .cc-icon    { font-size: 1.5rem; margin-bottom: 12px; display: block; }
+    .cc-title   { font-family: 'Syne', sans-serif; font-size: 0.95rem; font-weight: 700; color: var(--text); margin-bottom: var(--sp-sm); }
+    .cc-desc    { font-size: 0.82rem; color: var(--muted); font-weight: 300; line-height: 1.65; margin-bottom: var(--sp-md); }
+    .cc-tags    { display: flex; flex-wrap: wrap; gap: 6px; }
+    .cc-tag     { font-size: 0.7rem; padding: 3px 10px; border-radius: 100px; font-weight: 600; }
+
+    /* ============================================================
+       FORMULA REFERENCE SECTION
+    ============================================================ */
+    .formula-section {
+      max-width: 1280px;
+      margin: 28px auto 0;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      animation: fadeUp 0.7s 0.45s ease both;
+    }
+
+    .formula-card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: var(--sp-lg);
+    }
+
+    .formula-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: var(--sp-md);
+    }
+
+    .formula-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+
+    .formula-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 0.9rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .formula-box {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 0.75rem;
+      line-height: 1.8;
+      color: var(--muted);
+    }
+
+    .formula-box strong { color: var(--text); font-weight: 600; }
+
+    /* ============================================================
+       ANIMATIONS
+    ============================================================ */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(24px); }
+      to   { opacity: 1; transform: translateY(0);    }
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1;   transform: scale(1);   }
+      50%       { opacity: 0.4; transform: scale(0.8); }
+    }
+
+    /* ============================================================
+       RESPONSIVE
+    ============================================================ */
+    @media (max-width: 960px) {
+      .three-col      { grid-template-columns: 1fr; }
+      .compare-grid   { grid-template-columns: 1fr; }
+      .formula-section{ grid-template-columns: 1fr; }
+      .calc-tabs      { gap: var(--sp-sm); }
+      .tab-btn        { padding: 10px 18px; font-size: 0.8rem; }
+    }
+
+    @media (max-width: 600px) {
+      .page            { padding: 100px 4vw 60px; }
+      .compare-section { padding: var(--sp-lg) 20px; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient background blobs -->
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+
+  <!-- ============================================================
+       NAVIGATION
+  ============================================================ -->
+  <nav>
+    <a href="corelytics.html" class="logo">Core<span>lytics</span></a>
+    <a href="corelytics.html" class="nav-back">
+      <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8"
+           stroke-linecap="round" stroke-linejoin="round">
+        <path d="M10 3L5 8l5 5"/>
+      </svg>
+      Back to Home
+    </a>
+  </nav>
+
+  <!-- ============================================================
+       PAGE CONTENT
+  ============================================================ -->
+  <div class="page">
+
+    <!-- Page header -->
+    <div class="page-header">
+      <div class="page-badge">
+        <div class="dot"></div> AI-Powered Health Tools
+      </div>
+      <h1 class="page-title">Your Body, <span>Fully Calculated</span></h1>
+      <p class="page-sub">
+        Three precision calculators — Body Fat Percentage, Daily Calorie Needs, and Basal
+        Metabolic Rate — working together to give you the complete picture of your health.
+      </p>
+    </div>
+
+    <!-- Tab quick-scroll selector -->
+    <div class="calc-tabs">
+      <button class="tab-btn active" data-tab="bodyfat" onclick="scrollToCalc('col-bf')">
+        <span class="tab-icon">💧</span> Body Fat % Calculator
+      </button>
+      <button class="tab-btn" data-tab="calories" onclick="scrollToCalc('col-cal')">
+        <span class="tab-icon">🔥</span> Daily Calories Calculator
+      </button>
+      <button class="tab-btn" data-tab="bmr" onclick="scrollToCalc('col-bmr')">
+        <span class="tab-icon">🧬</span> BMR Calculator
+      </button>
+    </div>
+
+    <!-- ============================================================
+         THREE-COLUMN CALCULATORS
+    ============================================================ -->
+    <div class="three-col" id="three-col">
+
+      <!-- ── COLUMN 1: Body Fat % ── -->
+      <div class="calc-col col-bf" id="col-bf">
+        <div class="col-header">
+          <div class="col-icon">💧</div>
+          <div>
+            <div class="col-title">Body Fat %<br>Calculator</div>
+            <div class="col-subtitle">Uses US Navy circumference method for accurate estimation</div>
+          </div>
+        </div>
+
+        <div class="col-body">
+          <div class="field">
+            <div class="field-label">Biological Sex</div>
+            <div class="mini-toggle">
+              <button class="mini-btn active" id="bf-male"   onclick="setBFGender('male')">Male</button>
+              <button class="mini-btn"        id="bf-female" onclick="setBFGender('female')">Female</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="field-label">Height <span class="fv" id="bf-height-val">175 cm</span></div>
+            <input type="range" id="bf-height" min="140" max="220" value="175"
+                   oninput="updateVal('bf-height-val', this.value, ' cm'); calcBF()">
+            <div class="slider-range"><span>140</span><span>180</span><span>220 cm</span></div>
+          </div>
+
+          <div class="field">
+            <div class="field-label">Neck Circumference <span class="fv" id="bf-neck-val">38 cm</span></div>
+            <input type="range" id="bf-neck" min="28" max="55" value="38"
+                   oninput="updateVal('bf-neck-val', this.value, ' cm'); calcBF()">
+            <div class="slider-range"><span>28</span><span>42</span><span>55 cm</span></div>
+          </div>
+
+          <div class="field">
+            <div class="field-label">Waist Circumference <span class="fv" id="bf-waist-val">82 cm</span></div>
+            <input type="range" id="bf-waist" min="55" max="150" value="82"
+                   oninput="updateVal('bf-waist-val', this.value, ' cm'); calcBF()">
+            <div class="slider-range"><span>55</span><span>100</span><span>150 cm</span></div>
+          </div>
+
+          <!-- Female-only: hip measurement -->
+          <div class="field" id="bf-hip-field" style="display:none;">
+            <div class="field-label">Hip Circumference <span class="fv" id="bf-hip-val">95 cm</span></div>
+            <input type="range" id="bf-hip" min="70" max="150" value="95"
+                   oninput="updateVal('bf-hip-val', this.value, ' cm'); calcBF()">
+            <div class="slider-range"><span>70</span><span>110</span><span>150 cm</span></div>
+          </div>
+
+          <button class="col-calc-btn" onclick="calcBF(true)">⚡ Calculate Body Fat</button>
+        </div>
+
+        <div class="col-result" id="bf-result">
+          <div class="result-label">Your Body Fat</div>
+          <div class="big-result">
+            <div class="br-num" id="bf-pct">—</div>
+            <div class="br-unit">%</div>
+          </div>
+          <div class="res-badge" id="bf-cat-badge">—</div>
+
+          <div class="mini-metrics">
+            <div class="mini-m">
+              <div class="mm-val" id="bf-fat-mass">—</div>
+              <div class="mm-lbl">Fat Mass (kg)</div>
+            </div>
+            <div class="mini-m">
+              <div class="mm-val" id="bf-lean-mass">—</div>
+              <div class="mm-lbl">Lean Mass (kg)</div>
+            </div>
+          </div>
+
+          <div>
+            <div class="result-label" style="margin-bottom:10px;">Category Ranges (Male)</div>
+            <div class="breakdown-bar" id="bf-ranges">
+              <div class="bb-row"><span class="bb-label">Essential</span><div class="bb-track"><div class="bb-fill" style="width:8%;background:var(--accent2);"></div></div><span class="bb-val">2–5%</span></div>
+              <div class="bb-row"><span class="bb-label">Athlete</span><div class="bb-track"><div class="bb-fill" style="width:18%;background:var(--accent2);opacity:0.8;"></div></div><span class="bb-val">6–13%</span></div>
+              <div class="bb-row"><span class="bb-label">Fitness</span><div class="bb-track"><div class="bb-fill" style="width:30%;background:var(--accent);"></div></div><span class="bb-val">14–17%</span></div>
+              <div class="bb-row"><span class="bb-label">Average</span><div class="bb-track"><div class="bb-fill" style="width:50%;background:var(--accent4);"></div></div><span class="bb-val">18–24%</span></div>
+              <div class="bb-row"><span class="bb-label">Obese</span><div class="bb-track"><div class="bb-fill" style="width:75%;background:var(--accent3);"></div></div><span class="bb-val">25%+</span></div>
+            </div>
+          </div>
+
+          <div class="tip-box">
+            <span class="tip-icon">💡</span>
+            <span id="bf-tip">Measure in the morning before eating for best accuracy.</span>
+          </div>
+        </div>
+      </div><!-- /col-bf -->
+
+      <!-- ── COLUMN 2: Daily Calories ── -->
+      <div class="calc-col col-cal" id="col-cal">
+        <div class="col-header">
+          <div class="col-icon">🔥</div>
+          <div>
+            <div class="col-title">Daily Calories<br>Calculator</div>
+            <div class="col-subtitle">Calculates TDEE and adjusts for your specific goal</div>
+          </div>
+        </div>
+
+        <div class="col-body">
+          <div class="field">
+            <div class="field-label">Biological Sex</div>
+            <div class="mini-toggle">
+              <button class="mini-btn active" id="cal-male"   onclick="setCalGender('male')">Male</button>
+              <button class="mini-btn"        id="cal-female" onclick="setCalGender('female')">Female</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="field-label">Age <span class="fv" id="cal-age-val">28 yrs</span></div>
+            <input type="range" id="cal-age" min="15" max="75" value="28"
+                   oninput="updateVal('cal-age-val', this.value, ' yrs'); calcCal()">
+            <div class="slider-range"><span>15</span><span>45</span><span>75 yrs</span></div>
+          </div>
+
+          <div class="field">
+            <div class="field-label">Height <span class="fv" id="cal-height-val">175 cm</span></div>
+            <input type="range" id="cal-height" min="140" max="220" value="175"
+                   oninput="updateVal('cal-height-val', this.value, ' cm'); calcCal()">
+            <div class="slider-range"><span>140</span><span>180</span><span>220 cm</span></div>
+          </div>
+
+          <div class="field">
+            <div class="field-label">Weight <span class="fv" id="cal-weight-val">75 kg</span></div>
+            <input type="range" id="cal-weight" min="40" max="180" value="75"
+                   oninput="updateVal('cal-weight-val', this.value, ' kg'); calcCal()">
+            <div class="slider-range"><span>40</span><span>110</span><span>180 kg</span></div>
+          </div>
+
+          <div class="field">
+            <div class="field-label">Activity Level</div>
+            <select class="goal-select" id="cal-activity" onchange="calcCal()">
+              <option value="1.2">🛋️ Sedentary (desk job, no exercise)</option>
+              <option value="1.375" selected>🚶 Lightly Active (1–3 days/week)</option>
+              <option value="1.55">🏃 Moderately Active (3–5 days/week)</option>
+              <option value="1.725">🏋️ Very Active (6–7 days/week)</option>
+              <option value="1.9">🔥 Extra Active (athlete / physical job)</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <div class="field-label">Your Goal</div>
+            <select class="goal-select" id="cal-goal" onchange="calcCal()">
+              <option value="loss2">🔻 Aggressive Fat Loss (−1 kg/week)</option>
+              <option value="loss1" selected>📉 Moderate Fat Loss (−0.5 kg/week)</option>
+              <option value="maintain">⚖️ Maintain Weight</option>
+              <option value="gain1">📈 Lean Muscle Gain (+0.25 kg/week)</option>
+              <option value="gain2">💪 Aggressive Muscle Gain (+0.5 kg/week)</option>
+            </select>
+          </div>
+
+          <button class="col-calc-btn" onclick="calcCal(true)">⚡ Calculate My Calories</button>
+        </div>
+
+        <div class="col-result" id="cal-result">
+          <div class="result-label">Daily Target Calories</div>
+          <div class="big-result">
+            <div class="br-num" id="cal-num">—</div>
+            <div class="br-unit">kcal/day</div>
+          </div>
+          <div class="res-badge" id="cal-goal-badge">—</div>
+
+          <div class="mini-metrics">
+            <div class="mini-m">
+              <div class="mm-val" id="cal-tdee">—</div>
+              <div class="mm-lbl">TDEE (kcal)</div>
+            </div>
+            <div class="mini-m">
+              <div class="mm-val" id="cal-deficit">—</div>
+              <div class="mm-lbl">Deficit/Surplus</div>
+            </div>
+          </div>
+
+          <div>
+            <div class="result-label" style="margin-bottom:10px;">Recommended Macros</div>
+            <div class="breakdown-bar">
+              <div class="bb-row"><span class="bb-label">Protein</span><div class="bb-track"><div class="bb-fill" id="cal-protein-bar" style="width:30%;background:var(--accent3);"></div></div><span class="bb-val" id="cal-protein-g">—</span></div>
+              <div class="bb-row"><span class="bb-label">Carbs</span><div class="bb-track"><div class="bb-fill" id="cal-carb-bar"    style="width:50%;background:var(--accent4);"></div></div><span class="bb-val" id="cal-carb-g">—</span></div>
+              <div class="bb-row"><span class="bb-label">Fats</span><div class="bb-track"><div class="bb-fill" id="cal-fat-bar"     style="width:20%;background:var(--accent2);"></div></div><span class="bb-val" id="cal-fat-g">—</span></div>
+            </div>
+          </div>
+
+          <div class="tip-box">
+            <span class="tip-icon">💡</span>
+            <span id="cal-tip">Track your meals consistently for the first 2 weeks to build awareness of your eating patterns.</span>
+          </div>
+        </div>
+      </div><!-- /col-cal -->
+
+      <!-- ── COLUMN 3: BMR ── -->
+      <div class="calc-col col-bmr" id="col-bmr">
+        <div class="col-header">
+          <div class="col-icon">🧬</div>
+          <div>
+            <div class="col-title">BMR<br>Calculator</div>
+            <div class="col-subtitle">Mifflin-St Jeor equation — the gold standard for BMR accuracy</div>
+          </div>
+        </div>
+
+        <div class="col-body">
+          <div class="field">
+            <div class="field-label">Biological Sex</div>
+            <div class="mini-toggle">
+              <button class="mini-btn active" id="bmr-male"   onclick="setBMRGender('male')">Male</button>
+              <button class="mini-btn"        id="bmr-female" onclick="setBMRGender('female')">Female</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <div class="field-label">Age <span class="fv" id="bmr-age-val">28 yrs</span></div>
+            <input type="range" id="bmr-age" min="15" max="80" value="28"
+                   oninput="updateVal('bmr-age-val', this.value, ' yrs'); calcBMR()">
+            <div class="slider-range"><span>15</span><span>47</span><span>80 yrs</span></div>
+          </div>
+
+          <div class="field">
+            <div class="field-label">Height <span class="fv" id="bmr-height-val">175 cm</span></div>
+            <input type="range" id="bmr-height" min="140" max="220" value="175"
+                   oninput="updateVal('bmr-height-val', this.value, ' cm'); calcBMR()">
+            <div class="slider-range"><span>140</span><span>180</span><span>220 cm</span></div>
+          </div>
+
+          <div class="field">
+            <div class="field-label">Weight <span class="fv" id="bmr-weight-val">75 kg</span></div>
+            <input type="range" id="bmr-weight" min="40" max="180" value="75"
+                   oninput="updateVal('bmr-weight-val', this.value, ' kg'); calcBMR()">
+            <div class="slider-range"><span>40</span><span>110</span><span>180 kg</span></div>
+          </div>
+
+          <div class="field">
+            <div class="field-label">Formula</div>
+            <select class="goal-select" id="bmr-formula" onchange="onBMRFormulaChange()">
+              <option value="mifflin" selected>Mifflin-St Jeor (recommended)</option>
+              <option value="harris">Harris-Benedict (revised)</option>
+              <option value="katch">Katch-McArdle (if body fat known)</option>
+            </select>
+          </div>
+
+          <!-- Only shown when Katch-McArdle is selected -->
+          <div class="field" id="bmr-bf-field" style="display:none;">
+            <div class="field-label">Body Fat % <span class="fv" id="bmr-bf-val">18%</span></div>
+            <input type="range" id="bmr-bf" min="5" max="50" value="18"
+                   oninput="updateVal('bmr-bf-val', this.value, '%'); calcBMR()">
+            <div class="slider-range"><span>5%</span><span>27%</span><span>50%</span></div>
+          </div>
+
+          <button class="col-calc-btn" onclick="calcBMR(true)">⚡ Calculate BMR</button>
+        </div>
+
+        <div class="col-result" id="bmr-result">
+          <div class="result-label">Basal Metabolic Rate</div>
+          <div class="big-result">
+            <div class="br-num" id="bmr-num">—</div>
+            <div class="br-unit">kcal/day</div>
+          </div>
+
+          <div class="mini-metrics" style="grid-template-columns: repeat(3, 1fr);">
+            <div class="mini-m"><div class="mm-val" id="bmr-sed">—</div><div class="mm-lbl">Sedentary</div></div>
+            <div class="mini-m"><div class="mm-val" id="bmr-mod">—</div><div class="mm-lbl">Moderate</div></div>
+            <div class="mini-m"><div class="mm-val" id="bmr-act">—</div><div class="mm-lbl">Very Active</div></div>
+          </div>
+
+          <div>
+            <div class="result-label" style="margin-bottom:10px;">Calorie Burn by Activity</div>
+            <div class="breakdown-bar">
+              <div class="bb-row"><span class="bb-label">Sedentary</span>  <div class="bb-track"><div class="bb-fill" id="bmr-bar-sed" style="background:var(--accent5);width:50%;"></div></div>          <span class="bb-val" id="bmr-v-sed">—</span></div>
+              <div class="bb-row"><span class="bb-label">Light</span>       <div class="bb-track"><div class="bb-fill" id="bmr-bar-lig" style="background:var(--accent5);width:60%;opacity:0.85;"></div></div><span class="bb-val" id="bmr-v-lig">—</span></div>
+              <div class="bb-row"><span class="bb-label">Moderate</span>    <div class="bb-track"><div class="bb-fill" id="bmr-bar-mod" style="background:var(--accent5);width:70%;opacity:0.75;"></div></div><span class="bb-val" id="bmr-v-mod">—</span></div>
+              <div class="bb-row"><span class="bb-label">Very Active</span> <div class="bb-track"><div class="bb-fill" id="bmr-bar-vac" style="background:var(--accent5);width:85%;opacity:0.65;"></div></div><span class="bb-val" id="bmr-v-vac">—</span></div>
+              <div class="bb-row"><span class="bb-label">Extra Active</span><div class="bb-track"><div class="bb-fill" id="bmr-bar-ext" style="background:var(--accent5);width:100%;opacity:0.55;"></div></div><span class="bb-val" id="bmr-v-ext">—</span></div>
+            </div>
+          </div>
+
+          <div class="tip-box">
+            <span class="tip-icon">💡</span>
+            <span id="bmr-tip">Your BMR accounts for ~60–70% of your total daily calorie burn — even at complete rest.</span>
+          </div>
+        </div>
+      </div><!-- /col-bmr -->
+
+    </div><!-- /three-col -->
+
+    <!-- ============================================================
+         COMPARE SECTION – what each calculator measures
+    ============================================================ -->
+    <div class="compare-section">
+      <div class="compare-title">Understanding Each Calculator</div>
+      <div class="compare-sub">Know which metric to focus on depending on your current fitness stage.</div>
+      <div class="compare-grid">
+
+        <div class="compare-card bf-card">
+          <span class="cc-icon">💧</span>
+          <div class="cc-title">Body Fat Percentage</div>
+          <div class="cc-desc">
+            Measures the proportion of fat mass to total body weight. A far more meaningful health marker
+            than BMI alone — you can be a "healthy" BMI but have dangerously high fat levels (skinny fat).
+          </div>
+          <div class="cc-tags">
+            <span class="cc-tag" style="background:rgba(0,184,255,0.1);color:var(--accent2);">Body Composition</span>
+            <span class="cc-tag" style="background:rgba(0,184,255,0.1);color:var(--accent2);">US Navy Method</span>
+          </div>
+        </div>
+
+        <div class="compare-card cal-card">
+          <span class="cc-icon">🔥</span>
+          <div class="cc-title">Daily Calorie Needs</div>
+          <div class="cc-desc">
+            Your TDEE — Total Daily Energy Expenditure — is the exact number of calories you burn in a day.
+            Set calories below this to lose fat, above it to gain muscle. The foundation of any body transformation.
+          </div>
+          <div class="cc-tags">
+            <span class="cc-tag" style="background:rgba(255,107,53,0.1);color:var(--accent3);">Fat Loss</span>
+            <span class="cc-tag" style="background:rgba(255,107,53,0.1);color:var(--accent3);">Muscle Gain</span>
+            <span class="cc-tag" style="background:rgba(255,107,53,0.1);color:var(--accent3);">Macros</span>
+          </div>
+        </div>
+
+        <div class="compare-card bmr-card">
+          <span class="cc-icon">🧬</span>
+          <div class="cc-title">Basal Metabolic Rate</div>
+          <div class="cc-desc">
+            The minimum calories your body needs to sustain life at complete rest — breathing, circulation,
+            cell repair. Never eat below your BMR long-term; it triggers muscle loss and metabolic adaptation.
+          </div>
+          <div class="cc-tags">
+            <span class="cc-tag" style="background:rgba(191,127,255,0.1);color:var(--accent5);">Metabolism</span>
+            <span class="cc-tag" style="background:rgba(191,127,255,0.1);color:var(--accent5);">Energy Balance</span>
+          </div>
+        </div>
+
+      </div>
+    </div><!-- /compare-section -->
+
+    <!-- ============================================================
+         FORMULA REFERENCE
+    ============================================================ -->
+    <div class="formula-section">
+
+      <div class="formula-card">
+        <div class="formula-header">
+          <div class="formula-dot" style="background:var(--accent2);"></div>
+          <div class="formula-name">Body Fat % — US Navy Method</div>
+        </div>
+        <div class="formula-box">
+          <strong>Male:</strong><br>
+          495 ÷ (1.0324 − 0.19077 × log(waist−neck) + 0.15456 × log(height)) − 450<br><br>
+          <strong>Female:</strong><br>
+          495 ÷ (1.29579 − 0.35004 × log(waist+hip−neck) + 0.22100 × log(height)) − 450
+        </div>
+      </div>
+
+      <div class="formula-card">
+        <div class="formula-header">
+          <div class="formula-dot" style="background:var(--accent3);"></div>
+          <div class="formula-name">Daily Calories — Mifflin-St Jeor + Activity</div>
+        </div>
+        <div class="formula-box">
+          <strong>BMR (male):</strong>   (10 × kg) + (6.25 × cm) − (5 × age) + 5<br>
+          <strong>BMR (female):</strong> (10 × kg) + (6.25 × cm) − (5 × age) − 161<br><br>
+          <strong>TDEE:</strong> BMR × Activity Factor<br>
+          <strong>Goal:</strong> TDEE ± Calorie Adjustment
+        </div>
+      </div>
+
+      <div class="formula-card">
+        <div class="formula-header">
+          <div class="formula-dot" style="background:var(--accent5);"></div>
+          <div class="formula-name">BMR — Three Formula Variants</div>
+        </div>
+        <div class="formula-box">
+          <strong>Mifflin-St Jeor (default):</strong> as above<br><br>
+          <strong>Harris-Benedict (revised):</strong><br>
+          Male: 88.362 + (13.397×kg) + (4.799×cm) − (5.677×age)<br><br>
+          <strong>Katch-McArdle (lean mass):</strong><br>
+          370 + (21.6 × lean body mass in kg)
+        </div>
+      </div>
+
+    </div><!-- /formula-section -->
+
+  </div><!-- /page -->
+
+  <!-- ============================================================
+       JAVASCRIPT
+  ============================================================ -->
+  <script>
+    'use strict';
+
+    // ── Shared state ──────────────────────────────────────────────
+    let bfGender  = 'male';
+    let calGender = 'male';
+    let bmrGender = 'male';
+
+    // ── Utility: update a label's live-value span ─────────────────
+    function updateVal(id, value, suffix) {
+      document.getElementById(id).textContent = value + suffix;
+    }
+
+    // ── Tab navigation: smooth-scroll to a calculator card ────────
+    function scrollToCalc(targetId) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+
+      const activeTab = document.querySelector(`.tab-btn[onclick*="${targetId}"]`);
+      if (activeTab) activeTab.classList.add('active');
+
+      document.getElementById(targetId).scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setTimeout(() => window.scrollBy(0, -90), 400);
+    }
+
+    // ════════════════════════════════════════════════════════════
+    // BODY FAT % CALCULATOR  (US Navy circumference method)
+    // ════════════════════════════════════════════════════════════
+
+    function setBFGender(gender) {
+      bfGender = gender;
+      document.getElementById('bf-male').classList.toggle('active',   gender === 'male');
+      document.getElementById('bf-female').classList.toggle('active', gender === 'female');
+      document.getElementById('bf-hip-field').style.display = gender === 'female' ? 'flex' : 'none';
+      calcBF();
+    }
+
+    function calcBF() {
+      const h     = parseFloat(document.getElementById('bf-height').value);
+      const neck  = parseFloat(document.getElementById('bf-neck').value);
+      const waist = parseFloat(document.getElementById('bf-waist').value);
+      const hip   = parseFloat(document.getElementById('bf-hip').value);
+
+      let bf;
+      if (bfGender === 'male') {
+        bf = 495 / (1.0324 - 0.19077 * Math.log10(waist - neck) + 0.15456 * Math.log10(h)) - 450;
+      } else {
+        bf = 495 / (1.29579 - 0.35004 * Math.log10(waist + hip - neck) + 0.22100 * Math.log10(h)) - 450;
+      }
+      bf = Math.max(3, Math.min(60, bf));
+
+      // Derive fat/lean mass using BMR weight slider as body weight proxy
+      const weight   = parseFloat(document.getElementById('bmr-weight').value) || 75;
+      const fatMass  = (bf / 100 * weight).toFixed(1);
+      const leanMass = (weight - bf / 100 * weight).toFixed(1);
+
+      // Determine category
+      let cat, catColor, catBg, tip;
+      if (bfGender === 'male') {
+        if      (bf < 6)  { cat = 'Essential Fat'; catColor = '#00b8ff'; catBg = 'rgba(0,184,255,0.12)';  tip = 'Essential fat is the minimum required for normal bodily function. This level is unsustainable long-term.'; }
+        else if (bf < 14) { cat = 'Athlete';       catColor = '#00e5a0'; catBg = 'rgba(0,229,160,0.12)';  tip = 'Athletic body fat levels. Typically seen in competitive athletes with dedicated training.'; }
+        else if (bf < 18) { cat = 'Fitness';       catColor = '#00e5a0'; catBg = 'rgba(0,229,160,0.12)';  tip = 'Fitness-level body fat — lean and healthy. Most fitness goals target this range.'; }
+        else if (bf < 25) { cat = 'Average';       catColor = '#ffd166'; catBg = 'rgba(255,209,102,0.12)'; tip = 'Average body fat range. Cardiovascular fitness is still relatively good in this range.'; }
+        else              { cat = 'Above Average'; catColor = '#ff6b35'; catBg = 'rgba(255,107,53,0.12)';  tip = 'Body fat above 25% (male) is associated with elevated metabolic and cardiovascular risks.'; }
+      } else {
+        if      (bf < 14) { cat = 'Essential Fat'; catColor = '#00b8ff'; catBg = 'rgba(0,184,255,0.12)';  tip = 'Essential fat is the minimum required for hormonal and reproductive function in females.'; }
+        else if (bf < 21) { cat = 'Athlete';       catColor = '#00e5a0'; catBg = 'rgba(0,229,160,0.12)';  tip = 'Athletic body fat levels for females. Sustainable with proper nutrition and training.'; }
+        else if (bf < 25) { cat = 'Fitness';       catColor = '#00e5a0'; catBg = 'rgba(0,229,160,0.12)';  tip = 'A healthy, fit range for females that supports energy, hormones, and performance.'; }
+        else if (bf < 32) { cat = 'Average';       catColor = '#ffd166'; catBg = 'rgba(255,209,102,0.12)'; tip = 'Average body fat range for females. Consider more activity and dietary improvements.'; }
+        else              { cat = 'Above Average'; catColor = '#ff6b35'; catBg = 'rgba(255,107,53,0.12)';  tip = 'Body fat above 32% (female) is associated with elevated health risks.'; }
+      }
+
+      // Update DOM
+      document.getElementById('bf-result').classList.add('show');
+      document.getElementById('bf-pct').textContent       = bf.toFixed(1);
+      document.getElementById('bf-fat-mass').textContent  = fatMass;
+      document.getElementById('bf-lean-mass').textContent = leanMass;
+
+      const badge = document.getElementById('bf-cat-badge');
+      badge.textContent        = cat;
+      badge.style.background   = catBg;
+      badge.style.color        = catColor;
+
+      document.getElementById('bf-tip').textContent = tip;
+    }
+
+    // ════════════════════════════════════════════════════════════
+    // DAILY CALORIES CALCULATOR  (Mifflin-St Jeor + activity)
+    // ════════════════════════════════════════════════════════════
+
+    function setCalGender(gender) {
+      calGender = gender;
+      document.getElementById('cal-male').classList.toggle('active',   gender === 'male');
+      document.getElementById('cal-female').classList.toggle('active', gender === 'female');
+      calcCal();
+    }
+
+    function calcCal() {
+      const age = parseFloat(document.getElementById('cal-age').value);
+      const h   = parseFloat(document.getElementById('cal-height').value);
+      const w   = parseFloat(document.getElementById('cal-weight').value);
+      const act = parseFloat(document.getElementById('cal-activity').value);
+      const goal = document.getElementById('cal-goal').value;
+
+      // Mifflin-St Jeor BMR
+      const bmr = calGender === 'male'
+        ? 10 * w + 6.25 * h - 5 * age + 5
+        : 10 * w + 6.25 * h - 5 * age - 161;
+
+      const tdee = Math.round(bmr * act);
+
+      // Goal adjustments (kcal)
+      const adjustments = { loss2: -1000, loss1: -500, maintain: 0, gain1: 250, gain2: 500 };
+      const labels = {
+        loss2:    { text: 'Aggressive Fat Loss',    color: '#ff6b35', bg: 'rgba(255,107,53,0.12)'  },
+        loss1:    { text: 'Moderate Fat Loss',      color: '#ffd166', bg: 'rgba(255,209,102,0.12)' },
+        maintain: { text: 'Maintenance',            color: '#00e5a0', bg: 'rgba(0,229,160,0.12)'   },
+        gain1:    { text: 'Lean Muscle Gain',       color: '#00b8ff', bg: 'rgba(0,184,255,0.12)'   },
+        gain2:    { text: 'Aggressive Muscle Gain', color: '#bf7fff', bg: 'rgba(191,127,255,0.12)' },
+      };
+
+      const adj    = adjustments[goal];
+      const target = tdee + adj;
+
+      // Macro split: protein 30%, carbs 45%, fats 25%
+      const proteinG = Math.round(target * 0.30 / 4);
+      const carbG    = Math.round(target * 0.45 / 4);
+      const fatG     = Math.round(target * 0.25 / 9);
+
+      // Goal tips
+      const tips = {
+        loss2:    'Aggressive cuts require extra protein (2 g/kg) to preserve muscle. Monitor energy carefully.',
+        loss1:    'A 500 kcal/day deficit is sustainable and will yield roughly 0.5 kg of fat loss per week.',
+        maintain: 'Eat at TDEE to maintain weight. Adjust if the scale drifts up or down over 2 weeks.',
+        gain1:    'A small surplus minimizes fat gain while providing energy for muscle growth.',
+        gain2:    'Aggressive surplus works best in early training. Track to avoid excessive fat accumulation.',
+      };
+
+      // Update DOM
+      document.getElementById('cal-result').classList.add('show');
+      document.getElementById('cal-num').textContent     = target.toLocaleString();
+      document.getElementById('cal-tdee').textContent    = tdee.toLocaleString();
+      document.getElementById('cal-deficit').textContent = (adj >= 0 ? '+' : '') + adj;
+
+      const badge = document.getElementById('cal-goal-badge');
+      badge.textContent      = labels[goal].text;
+      badge.style.background = labels[goal].bg;
+      badge.style.color      = labels[goal].color;
+
+      document.getElementById('cal-protein-g').textContent = proteinG + 'g';
+      document.getElementById('cal-carb-g').textContent    = carbG    + 'g';
+      document.getElementById('cal-fat-g').textContent     = fatG     + 'g';
+
+      document.getElementById('cal-protein-bar').style.width = '30%';
+      document.getElementById('cal-carb-bar').style.width    = '45%';
+      document.getElementById('cal-fat-bar').style.width     = '25%';
+
+      document.getElementById('cal-tip').textContent = tips[goal];
+    }
+
+    // ════════════════════════════════════════════════════════════
+    // BMR CALCULATOR  (Mifflin / Harris-Benedict / Katch-McArdle)
+    // ════════════════════════════════════════════════════════════
+
+    function setBMRGender(gender) {
+      bmrGender = gender;
+      document.getElementById('bmr-male').classList.toggle('active',   gender === 'male');
+      document.getElementById('bmr-female').classList.toggle('active', gender === 'female');
+      calcBMR();
+    }
+
+    function onBMRFormulaChange() {
+      const formula = document.getElementById('bmr-formula').value;
+      document.getElementById('bmr-bf-field').style.display = formula === 'katch' ? 'flex' : 'none';
+      calcBMR();
+    }
+
+    function calcBMR() {
+      const age     = parseFloat(document.getElementById('bmr-age').value);
+      const h       = parseFloat(document.getElementById('bmr-height').value);
+      const w       = parseFloat(document.getElementById('bmr-weight').value);
+      const formula = document.getElementById('bmr-formula').value;
+      const bfPct   = parseFloat(document.getElementById('bmr-bf').value);
+
+      let bmr;
+      if (formula === 'mifflin') {
+        bmr = bmrGender === 'male'
+          ? 10 * w + 6.25 * h - 5 * age + 5
+          : 10 * w + 6.25 * h - 5 * age - 161;
+      } else if (formula === 'harris') {
+        bmr = bmrGender === 'male'
+          ? 88.362 + 13.397 * w + 4.799 * h - 5.677 * age
+          : 447.593 + 9.247 * w + 3.098 * h - 4.330 * age;
+      } else {
+        // Katch-McArdle uses lean body mass
+        const lbm = w * (1 - bfPct / 100);
+        bmr = 370 + 21.6 * lbm;
+      }
+
+      bmr = Math.round(bmr);
+
+      // Activity multipliers for the bar chart
+      const activityLevels = [
+        { mult: 1.2,   barId: 'bmr-bar-sed', valId: 'bmr-v-sed' },
+        { mult: 1.375, barId: 'bmr-bar-lig', valId: 'bmr-v-lig' },
+        { mult: 1.55,  barId: 'bmr-bar-mod', valId: 'bmr-v-mod' },
+        { mult: 1.725, barId: 'bmr-bar-vac', valId: 'bmr-v-vac' },
+        { mult: 1.9,   barId: 'bmr-bar-ext', valId: 'bmr-v-ext' },
+      ];
+
+      const maxTDEE = Math.round(bmr * 1.9);
+      activityLevels.forEach(({ mult, barId, valId }) => {
+        const val = Math.round(bmr * mult);
+        document.getElementById(valId).textContent      = val.toLocaleString();
+        document.getElementById(barId).style.width      = ((val / maxTDEE) * 100) + '%';
+      });
+
+      // Formula-specific tips
+      const tips = {
+        mifflin: 'Mifflin-St Jeor is the most accurate equation for most people — validated in multiple large studies.',
+        harris:  'Harris-Benedict tends to overestimate BMR slightly compared to Mifflin-St Jeor.',
+        katch:   'Katch-McArdle is most accurate if you know your body fat % precisely from a DEXA or hydrostatic test.',
+      };
+
+      // Update DOM
+      document.getElementById('bmr-result').classList.add('show');
+      document.getElementById('bmr-num').textContent = bmr.toLocaleString();
+      document.getElementById('bmr-sed').textContent = Math.round(bmr * 1.2).toLocaleString();
+      document.getElementById('bmr-mod').textContent = Math.round(bmr * 1.55).toLocaleString();
+      document.getElementById('bmr-act').textContent = Math.round(bmr * 1.725).toLocaleString();
+      document.getElementById('bmr-tip').textContent = tips[formula];
+    }
+
+    // ── Auto-calculate on page load ───────────────────────────────
+    document.getElementById('bf-hip-field').style.display = 'none'; // hide hip field (male default)
+    calcBF();
+    calcCal();
+    calcBMR();
+  </script>
+
+</body>
+</html>

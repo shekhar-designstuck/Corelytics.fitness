@@ -1,0 +1,1816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Corelytics – AI-Powered Fitness & Nutrition</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080c0f;
+    --surface: #0d1318;
+    --surface2: #111a21;
+    --border: rgba(255,255,255,0.06);
+    --accent: #00e5a0;
+    --accent2: #00b8ff;
+    --accent3: #ff6b35;
+    --text: #e8edf0;
+    --muted: #5a6a75;
+    --card-bg: rgba(255,255,255,0.03);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    overflow-x: hidden;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  /* --- NOISE TEXTURE OVERLAY --- */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 999;
+    opacity: 0.4;
+  }
+
+  /* --- NAV --- */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    background: rgba(8,12,15,0.85);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 6vw;
+  }
+
+  /* Nav links row */
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .nav-links a {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--muted);
+    text-decoration: none;
+    padding: 8px 14px;
+    border-radius: 100px;
+    transition: color 0.2s, background 0.2s;
+    white-space: nowrap;
+  }
+
+  .nav-links a:hover {
+    color: var(--text);
+    background: rgba(255,255,255,0.05);
+  }
+
+  /* Scrolling ticker strip */
+  .nav-ticker {
+    border-top: 1px solid var(--border);
+    overflow: hidden;
+    position: relative;
+    padding: 0;
+    background: rgba(255,255,255,0.015);
+  }
+
+  .nav-ticker::before,
+  .nav-ticker::after {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 80px;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .nav-ticker::before {
+    left: 0;
+    background: linear-gradient(to right, rgba(8,12,15,0.95), transparent);
+  }
+
+  .nav-ticker::after {
+    right: 0;
+    background: linear-gradient(to left, rgba(8,12,15,0.95), transparent);
+  }
+
+  .ticker-track {
+    display: flex;
+    width: max-content;
+    animation: ticker-scroll 30s linear infinite;
+    cursor: grab;
+    user-select: none;
+  }
+
+  .ticker-track:active { cursor: grabbing; animation-play-state: paused; }
+  .ticker-track:hover { animation-play-state: paused; }
+
+  @keyframes ticker-scroll {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+
+  .ticker-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 20px;
+    white-space: nowrap;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--muted);
+    cursor: pointer;
+    border-radius: 0;
+    transition: color 0.2s;
+    text-decoration: none;
+    flex-shrink: 0;
+    border-right: 1px solid var(--border);
+  }
+
+  .ticker-item:hover { color: var(--accent); }
+
+  .ticker-item .ti-icon { font-size: 0.95rem; }
+
+  .ticker-item .ti-badge {
+    font-size: 0.62rem;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 100px;
+    letter-spacing: 0.04em;
+  }
+
+  .ticker-item .ti-badge.new { background: rgba(0,229,160,0.15); color: var(--accent); }
+  .ticker-item .ti-badge.hot { background: rgba(255,107,53,0.15); color: var(--accent3); }
+  .ticker-item .ti-badge.ai  { background: rgba(0,184,255,0.15);  color: var(--accent2); }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.5rem;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .logo span { color: var(--accent); }
+
+  .nav-cta {
+    background: var(--accent);
+    color: #000 !important;
+    padding: 10px 22px;
+    border-radius: 100px;
+    font-weight: 600 !important;
+    transition: opacity 0.2s !important;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-family: 'DM Sans', sans-serif;
+  }
+
+  .nav-cta:hover { opacity: 0.85; color: #000 !important; }
+
+  /* --- HERO --- */
+  .hero {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 160px 6vw 100px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  /* Radial glow blobs */
+  .hero::before {
+    content: '';
+    position: absolute;
+    top: -10%;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 900px;
+    height: 600px;
+    background: radial-gradient(ellipse, rgba(0,229,160,0.07) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    right: -200px;
+    width: 600px;
+    height: 600px;
+    background: radial-gradient(ellipse, rgba(0,184,255,0.05) 0%, transparent 70%);
+    pointer-events: none;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(0,229,160,0.08);
+    border: 1px solid rgba(0,229,160,0.2);
+    border-radius: 100px;
+    padding: 6px 16px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--accent);
+    margin-bottom: 32px;
+    animation: fadeSlideUp 0.8s ease both;
+  }
+
+  .hero-badge .dot {
+    width: 6px; height: 6px;
+    background: var(--accent);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.4; transform: scale(0.8); }
+  }
+
+  h1 {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(3rem, 7vw, 6.5rem);
+    line-height: 1.02;
+    letter-spacing: -0.04em;
+    color: var(--text);
+    max-width: 900px;
+    animation: fadeSlideUp 0.8s 0.1s ease both;
+  }
+
+  h1 .highlight {
+    position: relative;
+    color: var(--accent);
+  }
+
+  h1 .highlight2 { color: var(--accent2); }
+
+  .hero-sub {
+    margin-top: 28px;
+    font-size: 1.125rem;
+    color: var(--muted);
+    max-width: 580px;
+    line-height: 1.7;
+    font-weight: 300;
+    animation: fadeSlideUp 0.8s 0.2s ease both;
+  }
+
+  .hero-actions {
+    display: flex;
+    gap: 16px;
+    margin-top: 44px;
+    animation: fadeSlideUp 0.8s 0.3s ease both;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .btn-primary {
+    background: var(--accent);
+    color: #000;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    font-size: 0.95rem;
+    padding: 14px 32px;
+    border-radius: 100px;
+    border: none;
+    cursor: pointer;
+    text-decoration: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 0 40px rgba(0,229,160,0.25);
+    display: inline-block;
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 60px rgba(0,229,160,0.4);
+  }
+
+  .btn-outline {
+    background: transparent;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 500;
+    font-size: 0.95rem;
+    padding: 14px 32px;
+    border-radius: 100px;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    text-decoration: none;
+    transition: border-color 0.2s, background 0.2s;
+    display: inline-block;
+  }
+
+  .btn-outline:hover {
+    border-color: rgba(255,255,255,0.2);
+    background: rgba(255,255,255,0.03);
+  }
+
+  /* stats row */
+  .hero-stats {
+    display: flex;
+    gap: 48px;
+    margin-top: 80px;
+    animation: fadeSlideUp 0.8s 0.4s ease both;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .stat {
+    text-align: center;
+  }
+
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -0.03em;
+  }
+
+  .stat-num span { color: var(--accent); }
+
+  .stat-label {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 4px;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .stat-divider {
+    width: 1px;
+    background: var(--border);
+    align-self: stretch;
+  }
+
+  /* --- FLOATING CARDS / METRICS DISPLAY --- */
+  .metrics-section {
+    padding: 80px 6vw;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr 1fr;
+    gap: 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .metric-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.3s, transform 0.3s;
+    animation: fadeSlideUp 0.6s ease both;
+  }
+
+  .metric-card:hover {
+    border-color: rgba(0,229,160,0.2);
+    transform: translateY(-4px);
+  }
+
+  .metric-card::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 60px; height: 60px;
+    background: radial-gradient(circle, rgba(0,229,160,0.15), transparent 70%);
+    pointer-events: none;
+  }
+
+  .metric-icon {
+    font-size: 1.5rem;
+    margin-bottom: 16px;
+    display: block;
+  }
+
+  .metric-value {
+    font-family: 'Syne', sans-serif;
+    font-size: 2.2rem;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -0.04em;
+    line-height: 1;
+  }
+
+  .metric-label {
+    font-size: 0.8rem;
+    color: var(--muted);
+    margin-top: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .metric-change {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    margin-top: 12px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--accent);
+    background: rgba(0,229,160,0.08);
+    padding: 3px 10px;
+    border-radius: 100px;
+  }
+
+  .metric-change.down { color: var(--accent3); background: rgba(255,107,53,0.08); }
+
+  /* --- SECTION SHARED --- */
+  section { padding: 100px 6vw; }
+
+  .section-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 16px;
+  }
+
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2rem, 4vw, 3.2rem);
+    font-weight: 800;
+    letter-spacing: -0.03em;
+    line-height: 1.1;
+    color: var(--text);
+    max-width: 600px;
+  }
+
+  .section-desc {
+    color: var(--muted);
+    font-size: 1rem;
+    font-weight: 300;
+    max-width: 500px;
+    margin-top: 16px;
+    line-height: 1.8;
+  }
+
+  /* --- FEATURES --- */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-top: 60px;
+    max-width: 1200px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .feature-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 36px 32px;
+    transition: border-color 0.3s, transform 0.3s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .feature-card:hover {
+    border-color: rgba(255,255,255,0.12);
+    transform: translateY(-4px);
+  }
+
+  .feature-card.featured {
+    border-color: rgba(0,229,160,0.25);
+    background: linear-gradient(135deg, rgba(0,229,160,0.05), transparent);
+    grid-column: span 2;
+  }
+
+  .feature-card.featured::after {
+    content: 'Core Feature';
+    position: absolute;
+    top: 24px; right: 24px;
+    background: rgba(0,229,160,0.12);
+    color: var(--accent);
+    font-size: 0.7rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 100px;
+    border: 1px solid rgba(0,229,160,0.2);
+  }
+
+  .feat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.4rem;
+    margin-bottom: 24px;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+  }
+
+  .feat-icon.green { background: rgba(0,229,160,0.1); border-color: rgba(0,229,160,0.2); }
+  .feat-icon.blue { background: rgba(0,184,255,0.1); border-color: rgba(0,184,255,0.2); }
+  .feat-icon.orange { background: rgba(255,107,53,0.1); border-color: rgba(255,107,53,0.2); }
+
+  .feat-title {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 12px;
+    letter-spacing: -0.02em;
+  }
+
+  .feat-desc {
+    color: var(--muted);
+    font-size: 0.9rem;
+    line-height: 1.75;
+    font-weight: 300;
+  }
+
+  /* --- BENTO NUTRITION TRACKER --- */
+  .nutrition-section {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nutrition-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+  }
+
+  .nutrition-visual {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .calorie-ring-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 32px;
+    display: flex;
+    align-items: center;
+    gap: 28px;
+  }
+
+  .ring-visual {
+    position: relative;
+    width: 110px;
+    height: 110px;
+    flex-shrink: 0;
+  }
+
+  .ring-visual svg {
+    transform: rotate(-90deg);
+  }
+
+  .ring-visual .ring-label {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+  }
+
+  .ring-label .rl-num {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--text);
+    letter-spacing: -0.04em;
+  }
+
+  .ring-label .rl-sub {
+    font-size: 0.65rem;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .ring-info h4 {
+    font-family: 'Syne', sans-serif;
+    font-size: 1.05rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 8px;
+  }
+
+  .macro-bars { display: flex; flex-direction: column; gap: 8px; margin-top: 12px; }
+
+  .macro-bar-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 0.8rem;
+  }
+
+  .macro-bar-row .mb-label { color: var(--muted); width: 60px; }
+
+  .macro-track {
+    flex: 1;
+    height: 4px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 100px;
+    overflow: hidden;
+  }
+
+  .macro-fill {
+    height: 100%;
+    border-radius: 100px;
+  }
+
+  .macro-bar-row .mb-val { color: var(--text); font-weight: 600; font-size: 0.75rem; min-width: 40px; text-align: right; }
+
+  .meal-log {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 24px;
+  }
+
+  .meal-log h4 {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 16px;
+  }
+
+  .meal-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.85rem;
+  }
+
+  .meal-item:last-child { border-bottom: none; }
+
+  .meal-item .mi-name { color: var(--text); font-weight: 500; }
+  .meal-item .mi-tag {
+    font-size: 0.7rem;
+    color: var(--accent2);
+    background: rgba(0,184,255,0.08);
+    padding: 2px 8px;
+    border-radius: 100px;
+  }
+  .meal-item .mi-cal { color: var(--muted); font-size: 0.8rem; }
+
+  /* --- WORKOUT PLAN SECTION --- */
+  .workout-section { max-width: 1200px; margin: 0 auto; }
+
+  .workout-inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+  }
+
+  .day-cards { display: flex; flex-direction: column; gap: 12px; }
+
+  .day-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: border-color 0.2s, transform 0.2s;
+    cursor: pointer;
+  }
+
+  .day-card:hover {
+    border-color: rgba(0,229,160,0.2);
+    transform: translateX(4px);
+  }
+
+  .day-card.active {
+    border-color: rgba(0,229,160,0.3);
+    background: rgba(0,229,160,0.04);
+  }
+
+  .dc-day {
+    font-family: 'Syne', sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--accent);
+    width: 36px;
+  }
+
+  .dc-info { flex: 1; }
+  .dc-name { font-weight: 500; font-size: 0.9rem; color: var(--text); }
+  .dc-sets { font-size: 0.75rem; color: var(--muted); margin-top: 2px; }
+
+  .dc-badge {
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 100px;
+  }
+
+  .dc-badge.strength { background: rgba(0,229,160,0.1); color: var(--accent); }
+  .dc-badge.cardio { background: rgba(0,184,255,0.1); color: var(--accent2); }
+  .dc-badge.rest { background: rgba(255,255,255,0.05); color: var(--muted); }
+
+  /* --- AI CHATBOT SECTION --- */
+  .ai-section {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .ai-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+  }
+
+  .chat-window {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    overflow: hidden;
+  }
+
+  .chat-header {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .chat-avatar {
+    width: 32px; height: 32px;
+    background: linear-gradient(135deg, var(--accent), var(--accent2));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+  }
+
+  .chat-status { display: flex; flex-direction: column; }
+  .chat-name { font-size: 0.85rem; font-weight: 600; color: var(--text); }
+  .chat-online { font-size: 0.7rem; color: var(--accent); display: flex; align-items: center; gap: 4px; }
+  .chat-online::before { content: ''; width: 5px; height: 5px; background: var(--accent); border-radius: 50%; display: inline-block; }
+
+  .chat-body { padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+
+  .msg {
+    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: 16px;
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+
+  .msg.ai {
+    background: rgba(0,229,160,0.08);
+    border: 1px solid rgba(0,229,160,0.15);
+    color: var(--text);
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+  }
+
+  .msg.user {
+    background: rgba(255,255,255,0.06);
+    color: var(--text);
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+  }
+
+  .chat-input-row {
+    padding: 16px 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 10px;
+  }
+
+  .chat-input-row input {
+    flex: 1;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 10px 16px;
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    outline: none;
+  }
+
+  .chat-input-row input::placeholder { color: var(--muted); }
+  .chat-input-row input:focus { border-color: rgba(0,229,160,0.3); }
+
+  .chat-send {
+    background: var(--accent);
+    border: none;
+    border-radius: 100px;
+    padding: 10px 18px;
+    color: #000;
+    font-weight: 700;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+
+  .chat-send:hover { opacity: 0.8; }
+
+  /* --- PROGRESS SECTION --- */
+  .progress-section { max-width: 1200px; margin: 0 auto; }
+
+  .progress-inner {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 80px;
+    align-items: center;
+  }
+
+  .progress-chart-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 28px;
+  }
+
+  .chart-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+  }
+
+  .chart-title { font-family: 'Syne', sans-serif; font-size: 0.95rem; font-weight: 700; color: var(--text); }
+  .chart-subtitle { font-size: 0.75rem; color: var(--muted); margin-top: 4px; }
+  .chart-big-num { font-family: 'Syne', sans-serif; font-size: 2rem; font-weight: 800; color: var(--accent); letter-spacing: -0.04em; }
+  .chart-big-sub { font-size: 0.75rem; color: var(--muted); }
+
+  .svg-chart { width: 100%; height: 140px; }
+
+  .chart-labels {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.7rem;
+    color: var(--muted);
+    margin-top: 8px;
+  }
+
+  .streak-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 16px; }
+
+  .streak-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px;
+    text-align: center;
+  }
+
+  .streak-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--accent);
+    letter-spacing: -0.04em;
+  }
+
+  .streak-label { font-size: 0.75rem; color: var(--muted); margin-top: 4px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+  /* --- PAGES SECTION --- */
+  .pages-section {
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+  }
+
+  .pages-inner { max-width: 1200px; margin: 0 auto; text-align: center; }
+
+  .pages-grid {
+    display: grid;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 16px;
+    margin-top: 60px;
+  }
+
+  .page-pill {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 12px 20px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--muted);
+    transition: all 0.2s;
+    cursor: pointer;
+    text-align: center;
+  }
+
+  .page-pill:hover, .page-pill.active {
+    background: rgba(0,229,160,0.08);
+    border-color: rgba(0,229,160,0.25);
+    color: var(--accent);
+  }
+
+  /* --- TECH SECTION --- */
+  .tech-section { max-width: 1200px; margin: 0 auto; }
+
+  .tech-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 40px;
+  }
+
+  .tech-tag {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    padding: 10px 20px;
+    border-radius: 100px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--muted);
+    transition: all 0.2s;
+  }
+
+  .tech-tag:hover {
+    border-color: rgba(255,255,255,0.15);
+    color: var(--text);
+  }
+
+  /* --- CTA --- */
+  .cta-section {
+    text-align: center;
+    padding: 120px 6vw;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta-section::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 800px;
+    height: 400px;
+    background: radial-gradient(ellipse, rgba(0,229,160,0.06), transparent 70%);
+    pointer-events: none;
+  }
+
+  .cta-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2.5rem, 5vw, 4.5rem);
+    font-weight: 800;
+    letter-spacing: -0.04em;
+    line-height: 1.05;
+    color: var(--text);
+    max-width: 700px;
+    margin: 0 auto;
+  }
+
+  .cta-sub {
+    font-size: 1rem;
+    color: var(--muted);
+    max-width: 420px;
+    margin: 20px auto 40px;
+    font-weight: 300;
+  }
+
+  /* --- FOOTER --- */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 32px 6vw 0;
+  }
+
+  .footer-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+    padding-bottom: 28px;
+  }
+
+  footer .footer-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.2rem;
+    color: var(--text);
+  }
+
+  footer .footer-logo span { color: var(--accent); }
+
+  footer p { font-size: 0.8rem; color: var(--muted); }
+
+  /* Footer swipeable ticker */
+  .footer-ticker-wrap {
+    border-top: 1px solid var(--border);
+    overflow: hidden;
+    position: relative;
+    background: rgba(255,255,255,0.01);
+  }
+
+  .footer-ticker-wrap::before,
+  .footer-ticker-wrap::after {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 60px;
+    z-index: 2;
+    pointer-events: none;
+  }
+
+  .footer-ticker-wrap::before {
+    left: 0;
+    background: linear-gradient(to right, rgba(8,12,15,0.95), transparent);
+  }
+
+  .footer-ticker-wrap::after {
+    right: 0;
+    background: linear-gradient(to left, rgba(8,12,15,0.95), transparent);
+  }
+
+  .footer-ticker {
+    display: flex;
+    align-items: center;
+    width: max-content;
+    animation: ticker-scroll 20s linear infinite;
+    cursor: grab;
+    user-select: none;
+    padding: 14px 0;
+  }
+
+  .footer-ticker:hover { animation-play-state: paused; }
+  .footer-ticker:active { cursor: grabbing; }
+
+  .footer-tick-item {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--muted);
+    text-decoration: none;
+    white-space: nowrap;
+    padding: 0 18px;
+    transition: color 0.2s;
+    flex-shrink: 0;
+  }
+
+  .footer-tick-item:hover { color: var(--accent); }
+
+  .footer-tick-dot {
+    color: var(--border);
+    font-size: 1rem;
+    flex-shrink: 0;
+    user-select: none;
+  }
+
+  /* --- ANIMATIONS --- */
+  @keyframes fadeSlideUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  .fade-up {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.7s ease, transform 0.7s ease;
+  }
+
+  .fade-up.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* --- DIVIDER --- */
+  .divider {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    height: 1px;
+    background: var(--border);
+  }
+
+  /* responsive */
+  @media (max-width: 900px) {
+    .metrics-section { grid-template-columns: repeat(2, 1fr); }
+    .features-grid { grid-template-columns: 1fr; }
+    .feature-card.featured { grid-column: span 1; }
+    .nutrition-inner, .workout-inner, .ai-inner, .progress-inner { grid-template-columns: 1fr; gap: 40px; }
+    .pages-grid { grid-template-columns: repeat(3, 1fr); }
+    .nav-links { display: none; }
+  }
+
+  @media (max-width: 600px) {
+    .metrics-section { grid-template-columns: 1fr 1fr; }
+    .pages-grid { grid-template-columns: repeat(2, 1fr); }
+    .streak-cards { grid-template-columns: 1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-top">
+    <a href="index.html" class="logo">Core<span>lytics</span></a>
+    <div class="nav-links">
+      <a href="index.html">Home</a>
+      <a href="features.html">Features</a>
+      <a href="workout-plan.html">Workout Plan</a>
+      <a href="fat-or-bulk.html">Fat or Bulk</a>
+      <a href="corelytics-ai-coach.html">AI Coach</a>
+      <a href="bmi-calculator.html">BMI Calculator</a>
+    </div>
+    <a href="workout-plan.html" class="nav-cta">Own Workout Plan</a>
+  </div>
+
+  <!-- Swipeable Ticker -->
+  <div class="nav-ticker">
+    <div class="ticker-track" id="ticker">
+      <!-- Set 1 -->
+      <a href="bmi-calculator.html" class="ticker-item"><span class="ti-icon">⚖️</span> BMI Calculator <span class="ti-badge new">NEW</span></a>
+      <a href="fat-or-bulk.html" class="ticker-item"><span class="ti-icon">🎯</span> Fat Loss OR Bulking? <span class="ti-badge ai">AI</span></a>
+      <a href="features.html" class="ticker-item"><span class="ti-icon">💧</span> Body Fat % Calculator</a>
+      <a href="features.html" class="ticker-item"><span class="ti-icon">🔥</span> Daily Calories Calculator <span class="ti-badge hot">HOT</span></a>
+      <a href="features.html" class="ticker-item"><span class="ti-icon">🧬</span> BMR Calculator <span class="ti-badge ai">AI</span></a>
+      <a href="workout-plan.html" class="ticker-item"><span class="ti-icon">🏋️</span> Generate Workout Plan</a>
+      <a href="#nutrition" class="ticker-item"><span class="ti-icon">🍽️</span> Calorie & Nutrition Tracker</a>
+      <a href="#progress" class="ticker-item"><span class="ti-icon">📈</span> Progress Dashboard</a>
+      <a href="corelytics-ai-coach.html" class="ticker-item"><span class="ti-icon">🤖</span> AI Fitness Coach <span class="ti-badge ai">AI</span></a>
+      <a href="fat-or-bulk.html" class="ticker-item"><span class="ti-icon">🎯</span> Goal-Based Strategy</a>
+      <a href="#" class="ticker-item"><span class="ti-icon">🔔</span> Streak & Habit Tracker</a>
+      <a href="#" class="ticker-item"><span class="ti-icon">📄</span> PDF Report Export</a>
+      <a href="#" class="ticker-item"><span class="ti-icon">☁️</span> Cloud-Synced Data</a>
+      <a href="workout-plan.html" class="ticker-item"><span class="ti-icon">💪</span> Muscle Gain Planner <span class="ti-badge hot">HOT</span></a>
+      <a href="#" class="ticker-item"><span class="ti-icon">🏃</span> Cardio Zone Planner</a>
+      <a href="corelytics-ai-coach.html" class="ticker-item"><span class="ti-icon">🥗</span> AI Meal Suggestions <span class="ti-badge ai">AI</span></a>
+      <!-- Set 2 (duplicate for seamless loop) -->
+      <a href="bmi-calculator.html" class="ticker-item"><span class="ti-icon">⚖️</span> BMI Calculator <span class="ti-badge new">NEW</span></a>
+      <a href="fat-or-bulk.html" class="ticker-item"><span class="ti-icon">🎯</span> Fat Loss OR Bulking? <span class="ti-badge ai">AI</span></a>
+      <a href="features.html" class="ticker-item"><span class="ti-icon">💧</span> Body Fat % Calculator</a>
+      <a href="features.html" class="ticker-item"><span class="ti-icon">🔥</span> Daily Calories Calculator <span class="ti-badge hot">HOT</span></a>
+      <a href="features.html" class="ticker-item"><span class="ti-icon">🧬</span> BMR Calculator <span class="ti-badge ai">AI</span></a>
+      <a href="workout-plan.html" class="ticker-item"><span class="ti-icon">🏋️</span> Generate Workout Plan</a>
+      <a href="#nutrition" class="ticker-item"><span class="ti-icon">🍽️</span> Calorie & Nutrition Tracker</a>
+      <a href="#progress" class="ticker-item"><span class="ti-icon">📈</span> Progress Dashboard</a>
+      <a href="corelytics-ai-coach.html" class="ticker-item"><span class="ti-icon">🤖</span> AI Fitness Coach <span class="ti-badge ai">AI</span></a>
+      <a href="fat-or-bulk.html" class="ticker-item"><span class="ti-icon">🎯</span> Goal-Based Strategy</a>
+      <a href="#" class="ticker-item"><span class="ti-icon">🔔</span> Streak & Habit Tracker</a>
+      <a href="#" class="ticker-item"><span class="ti-icon">📄</span> PDF Report Export</a>
+      <a href="#" class="ticker-item"><span class="ti-icon">☁️</span> Cloud-Synced Data</a>
+      <a href="workout-plan.html" class="ticker-item"><span class="ti-icon">💪</span> Muscle Gain Planner <span class="ti-badge hot">HOT</span></a>
+      <a href="#" class="ticker-item"><span class="ti-icon">🏃</span> Cardio Zone Planner</a>
+      <a href="corelytics-ai-coach.html" class="ticker-item"><span class="ti-icon">🥗</span> AI Meal Suggestions <span class="ti-badge ai">AI</span></a>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge"><div class="dot"></div> AI-Powered Fitness Intelligence</div>
+  <h1>Your body,<br><span class="highlight">decoded</span> by <span class="highlight2">AI</span></h1>
+  <p class="hero-sub">Corelytics combines advanced body analysis, intelligent workout generation, and real-time nutrition tracking into one seamless digital fitness ecosystem.</p>
+  <div class="hero-actions">
+    <a href="bmi-calculator.html" class="btn-primary">BMI Calculator →</a>
+    <a href="features.html" class="btn-outline">Explore Features</a>
+  </div>
+  <div style="margin-top:16px;animation:fadeSlideUp 0.8s 0.35s ease both;">
+    <a href="fat-or-bulk.html" style="display:inline-flex;align-items:center;gap:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:100px;padding:12px 28px;font-size:0.9rem;font-weight:500;color:var(--text);text-decoration:none;transition:border-color 0.2s,background 0.2s;" onmouseover="this.style.borderColor='rgba(0,229,160,0.35)';this.style.background='rgba(0,229,160,0.06)';this.style.color='var(--accent)'" onmouseout="this.style.borderColor='rgba(255,255,255,0.1)';this.style.background='rgba(255,255,255,0.04)';this.style.color='var(--text)'">
+      <span style="font-size:1rem;">⚖️</span>
+      Should You Focus on Fat Loss, <em style="font-style:normal;color:var(--accent);font-weight:700;margin:0 2px;">OR</em> Bulking?
+      <span style="font-size:0.7rem;font-weight:700;padding:2px 8px;border-radius:100px;background:rgba(0,184,255,0.15);color:var(--accent2);letter-spacing:0.04em;">AI</span>
+      <span style="opacity:0.5;font-size:0.8rem;">→</span>
+    </a>
+  </div>
+  <div class="hero-stats">
+    <div class="stat">
+      <div class="stat-num">100<span>%</span></div>
+      <div class="stat-label">Accurate</div>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat">
+      <div class="stat-num">2M<span>+</span></div>
+      <div class="stat-label">Workouts Logged</div>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat">
+      <div class="stat-num">98<span>%</span></div>
+      <div class="stat-label">Goal Achievement</div>
+    </div>
+    <div class="stat-divider"></div>
+    <div class="stat">
+      <div class="stat-num">12<span>+</span></div>
+      <div class="stat-label">AI Models</div>
+    </div>
+  </div>
+</section>
+
+<!-- METRIC CARDS -->
+<div class="metrics-section fade-up">
+  <div class="metric-card">
+    <span class="metric-icon">⚖️</span>
+    <div class="metric-value">22.4</div>
+    <div class="metric-label">BMI Score</div>
+    <div class="metric-change">↑ Healthy Range</div>
+  </div>
+  <div class="metric-card">
+    <span class="metric-icon">🔥</span>
+    <div class="metric-value">2,340</div>
+    <div class="metric-label">Daily Calories</div>
+    <div class="metric-change">On Track</div>
+  </div>
+  <div class="metric-card">
+    <span class="metric-icon">💪</span>
+    <div class="metric-value">18.7<span style="font-size:1rem">%</span></div>
+    <div class="metric-label">Body Fat</div>
+    <div class="metric-change down">↓ -0.4% this week</div>
+  </div>
+  <div class="metric-card">
+    <span class="metric-icon">🧬</span>
+    <div class="metric-value">1,820</div>
+    <div class="metric-label">BMR (kcal/day)</div>
+    <div class="metric-change">Calculated</div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section id="features">
+  <div style="max-width:1200px;margin:0 auto;">
+    <div class="section-label">Platform Features</div>
+    <h2 class="section-title">Everything you need to transform your body</h2>
+    <p class="section-desc">From intelligent profiling to AI-driven meal suggestions — Corelytics handles the science so you can focus on results.</p>
+  </div>
+
+  <div class="features-grid fade-up">
+    <div class="feature-card featured">
+      <div class="feat-icon green">🤖</div>
+      <div class="feat-title">AI Body Analysis Engine</div>
+      <p class="feat-desc">Input your age, gender, height, weight, and activity level. Corelytics automatically calculates BMI, body fat percentage, BMR, and precise daily calorie requirements — then overlays personalized AI insights for an easy-to-understand health snapshot unique to you.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feat-icon blue">🏋️</div>
+      <div class="feat-title">Smart Workout Generator</div>
+      <p class="feat-desc">Structured routines with exercises, sets, reps, and weekly splits — tailored to your goal, experience, and equipment.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feat-icon green">📈</div>
+      <div class="feat-title">Progress Dashboard</div>
+      <p class="feat-desc">Visual weight trends, calorie analytics, and workout consistency charts over weekly and monthly timelines.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feat-icon blue">🎯</div>
+      <div class="feat-title">Goal-Based Strategy</div>
+      <p class="feat-desc">Fat loss, muscle gain, or maintenance — the platform builds a structured roadmap with deficit or surplus guidance.</p>
+    </div>
+    <div class="feature-card">
+      <div class="feat-icon orange">🔔</div>
+      <div class="feat-title">Streak & Habit Tracking</div>
+      <p class="feat-desc">Daily reminders, streak-based habit system, and consistency metrics to keep you accountable every day.</p>
+    </div>
+  </div>
+</section>
+
+<!-- NUTRITION -->
+<section id="nutrition" class="nutrition-section">
+  <div class="nutrition-inner">
+    <div class="nutrition-visual fade-up">
+      <div class="calorie-ring-card">
+        <div class="ring-visual">
+          <svg width="110" height="110" viewBox="0 0 110 110">
+            <circle cx="55" cy="55" r="46" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="10"/>
+            <circle cx="55" cy="55" r="46" fill="none" stroke="var(--accent)" stroke-width="10"
+              stroke-dasharray="289" stroke-dashoffset="72" stroke-linecap="round"/>
+          </svg>
+          <div class="ring-label">
+            <span class="rl-num">75%</span>
+            <span class="rl-sub">of goal</span>
+          </div>
+        </div>
+        <div class="ring-info">
+          <h4>Today's Calories</h4>
+          <p style="font-size:0.85rem;color:var(--muted);">1,755 / 2,340 kcal consumed</p>
+          <div class="macro-bars">
+            <div class="macro-bar-row">
+              <span class="mb-label">Protein</span>
+              <div class="macro-track"><div class="macro-fill" style="width:72%;background:var(--accent);"></div></div>
+              <span class="mb-val">142g</span>
+            </div>
+            <div class="macro-bar-row">
+              <span class="mb-label">Carbs</span>
+              <div class="macro-track"><div class="macro-fill" style="width:60%;background:var(--accent2);"></div></div>
+              <span class="mb-val">195g</span>
+            </div>
+            <div class="macro-bar-row">
+              <span class="mb-label">Fat</span>
+              <div class="macro-track"><div class="macro-fill" style="width:50%;background:var(--accent3);"></div></div>
+              <span class="mb-val">48g</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="meal-log">
+        <h4>Today's Meal Log</h4>
+        <div class="meal-item">
+          <span class="mi-name">Oats + Whey Protein</span>
+          <span class="mi-tag">Breakfast</span>
+          <span class="mi-cal">420 kcal</span>
+        </div>
+        <div class="meal-item">
+          <span class="mi-name">Grilled Chicken + Rice</span>
+          <span class="mi-tag">Lunch</span>
+          <span class="mi-cal">680 kcal</span>
+        </div>
+        <div class="meal-item">
+          <span class="mi-name">Greek Yogurt + Almonds</span>
+          <span class="mi-tag">Snack</span>
+          <span class="mi-cal">310 kcal</span>
+        </div>
+        <div class="meal-item">
+          <span class="mi-name">Salmon + Broccoli</span>
+          <span class="mi-tag">Dinner</span>
+          <span class="mi-cal">345 kcal</span>
+        </div>
+      </div>
+    </div>
+    <div class="fade-up">
+      <div class="section-label">Nutrition Tracker</div>
+      <h2 class="section-title">Every macro, every meal, perfectly tracked</h2>
+      <p class="section-desc">Log meals with our smart food database, scan barcodes, or let the AI suggest meals that hit your exact macro targets — all synced with your daily calorie budget.</p>
+      <div style="margin-top:32px;display:flex;flex-direction:column;gap:16px;">
+        <div style="display:flex;align-items:center;gap:14px;padding:16px;background:var(--card-bg);border:1px solid var(--border);border-radius:14px;">
+          <span style="font-size:1.5rem;">🍽️</span>
+          <div>
+            <div style="font-weight:600;font-size:0.9rem;color:var(--text);margin-bottom:4px;">Smart Meal Logging</div>
+            <div style="font-size:0.8rem;color:var(--muted);">Search, scan, or speak your meals for instant macro breakdown</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;padding:16px;background:var(--card-bg);border:1px solid var(--border);border-radius:14px;">
+          <span style="font-size:1.5rem;">🤖</span>
+          <div>
+            <div style="font-weight:600;font-size:0.9rem;color:var(--text);margin-bottom:4px;">AI Meal Suggestions</div>
+            <div style="font-size:0.8rem;color:var(--muted);">Get meal ideas that fit your remaining calories and macros perfectly</div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;padding:16px;background:var(--card-bg);border:1px solid var(--border);border-radius:14px;">
+          <span style="font-size:1.5rem;">📊</span>
+          <div>
+            <div style="font-weight:600;font-size:0.9rem;color:var(--text);margin-bottom:4px;">Macro Visualisation</div>
+            <div style="font-size:0.8rem;color:var(--muted);">Real-time ring charts and bar graphs for protein, carbs, and fat</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- WORKOUTS -->
+<section id="workouts">
+  <div class="workout-section">
+    <div class="workout-inner">
+      <div class="fade-up">
+        <div class="section-label">Workout Planner</div>
+        <h2 class="section-title">Intelligent training, built for your body</h2>
+        <p class="section-desc">Whether you train at home or in a gym, Corelytics generates structured weekly splits adapted to your goal, experience level, and available equipment — with optional video demo integrations.</p>
+        <div style="margin-top:32px;">
+          <a href="workout-plan.html" class="btn-primary" style="font-size:0.9rem;padding:12px 28px;">Generate Plan →</a>
+        </div>
+      </div>
+      <div class="day-cards fade-up">
+        <div class="day-card active">
+          <div class="dc-day">Mon</div>
+          <div class="dc-info">
+            <div class="dc-name">Chest & Triceps</div>
+            <div class="dc-sets">4 exercises · 16 sets</div>
+          </div>
+          <span class="dc-badge strength">Strength</span>
+        </div>
+        <div class="day-card">
+          <div class="dc-day">Tue</div>
+          <div class="dc-info">
+            <div class="dc-name">HIIT Cardio</div>
+            <div class="dc-sets">6 rounds · 30 min</div>
+          </div>
+          <span class="dc-badge cardio">Cardio</span>
+        </div>
+        <div class="day-card">
+          <div class="dc-day">Wed</div>
+          <div class="dc-info">
+            <div class="dc-name">Back & Biceps</div>
+            <div class="dc-sets">5 exercises · 20 sets</div>
+          </div>
+          <span class="dc-badge strength">Strength</span>
+        </div>
+        <div class="day-card">
+          <div class="dc-day">Thu</div>
+          <div class="dc-info">
+            <div class="dc-name">Active Recovery</div>
+            <div class="dc-sets">Yoga · Mobility</div>
+          </div>
+          <span class="dc-badge rest">Recovery</span>
+        </div>
+        <div class="day-card">
+          <div class="dc-day">Fri</div>
+          <div class="dc-info">
+            <div class="dc-name">Legs & Shoulders</div>
+            <div class="dc-sets">5 exercises · 18 sets</div>
+          </div>
+          <span class="dc-badge strength">Strength</span>
+        </div>
+        <div class="day-card">
+          <div class="dc-day">Sat</div>
+          <div class="dc-info">
+            <div class="dc-name">Steady State Cardio</div>
+            <div class="dc-sets">45 min · Zone 2</div>
+          </div>
+          <span class="dc-badge cardio">Cardio</span>
+        </div>
+        <div class="day-card">
+          <div class="dc-day">Sun</div>
+          <div class="dc-info">
+            <div class="dc-name">Full Rest Day</div>
+            <div class="dc-sets">Recovery + Sleep</div>
+          </div>
+          <span class="dc-badge rest">Rest</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- AI CHATBOT -->
+<section class="ai-section">
+  <div class="ai-inner">
+    <div>
+      <div class="section-label">AI Fitness Assistant</div>
+      <h2 class="section-title">Your personal coach, available 24/7</h2>
+      <p class="section-desc">Ask anything — form advice, meal timing, recovery protocols, supplement guidance. The Corelytics AI assistant draws from your data to give hyper-personalized, contextual responses in real time.</p>
+      <div style="margin-top:32px;display:flex;gap:16px;flex-wrap:wrap;">
+        <div style="display:flex;align-items:center;gap:8px;font-size:0.85rem;color:var(--muted);">
+          <span style="color:var(--accent);">✓</span> Form & technique tips
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:0.85rem;color:var(--muted);">
+          <span style="color:var(--accent);">✓</span> Nutrition advice
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:0.85rem;color:var(--muted);">
+          <span style="color:var(--accent);">✓</span> Recovery guidance
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;font-size:0.85rem;color:var(--muted);">
+          <span style="color:var(--accent);">✓</span> Supplement info
+        </div>
+      </div>
+      <div style="margin-top:32px;">
+        <a href="corelytics-ai-coach.html" class="btn-primary" style="font-size:0.9rem;padding:12px 28px;">Try AI Coach →</a>
+      </div>
+    </div>
+    <div class="chat-window fade-up">
+      <div class="chat-header">
+        <div class="chat-avatar">🤖</div>
+        <div class="chat-status">
+          <div class="chat-name">Corelytics AI</div>
+          <div class="chat-online">Online · Ready to help</div>
+        </div>
+      </div>
+      <div class="chat-body">
+        <div class="msg ai">Hey! Based on your current cut phase, I recommend keeping protein above 160g today — you're at 142g right now. Want me to suggest a high-protein snack?</div>
+        <div class="msg user">Yes! Something quick I can make at home?</div>
+        <div class="msg ai">Try 200g cottage cheese + 1 scoop whey + a handful of almonds. That's roughly 52g protein and 380 kcal — perfect for your deficit. 🥛</div>
+        <div class="msg user">What about my leg day tomorrow — should I add deadlifts?</div>
+        <div class="msg ai">Given your 4-week streak of lower back tightness from your logs, I'd swap Romanian deadlifts for leg press + hamstring curls this week. Want me to update your plan?</div>
+      </div>
+      <div class="chat-input-row">
+        <input type="text" placeholder="Ask your AI coach anything...">
+        <button class="chat-send">Send</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PROGRESS -->
+<section id="progress">
+  <div class="progress-section">
+    <div style="max-width:1200px;margin:0 auto 60px;" class="fade-up">
+      <div class="section-label">Progress Tracking</div>
+      <h2 class="section-title">Data-driven insights, visible results</h2>
+      <p class="section-desc">Dynamic charts and analytics surface the trends in your weight, calorie intake, and training consistency across weekly and monthly views.</p>
+    </div>
+    <div class="progress-inner">
+      <div class="fade-up">
+        <div class="progress-chart-card">
+          <div class="chart-header">
+            <div>
+              <div class="chart-title">Weight Progress</div>
+              <div class="chart-subtitle">Last 8 weeks</div>
+            </div>
+            <div style="text-align:right;">
+              <div class="chart-big-num">−3.2kg</div>
+              <div class="chart-big-sub">total loss</div>
+            </div>
+          </div>
+          <!-- SVG Line Chart -->
+          <svg class="svg-chart" viewBox="0 0 460 140" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stop-color="var(--accent)" stop-opacity="0.15"/>
+                <stop offset="100%" stop-color="var(--accent)" stop-opacity="0"/>
+              </linearGradient>
+            </defs>
+            <line x1="0" y1="30" x2="460" y2="30" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+            <line x1="0" y1="70" x2="460" y2="70" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+            <line x1="0" y1="110" x2="460" y2="110" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+            <path d="M0,110 L0,100 C40,95 80,88 120,75 C160,62 200,58 240,52 C280,46 320,44 360,35 L400,28 L460,22 L460,140 L0,140Z" fill="url(#areaGrad)"/>
+            <path d="M0,100 C40,95 80,88 120,75 C160,62 200,58 240,52 C280,46 320,44 360,35 L400,28 L460,22" fill="none" stroke="var(--accent)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <circle cx="0" cy="100" r="4" fill="var(--accent)"/>
+            <circle cx="120" cy="75" r="4" fill="var(--accent)"/>
+            <circle cx="240" cy="52" r="4" fill="var(--accent)"/>
+            <circle cx="360" cy="35" r="4" fill="var(--accent)"/>
+            <circle cx="460" cy="22" r="5" fill="var(--accent)" stroke="var(--bg)" stroke-width="2"/>
+          </svg>
+          <div class="chart-labels">
+            <span>Week 1</span><span>Week 2</span><span>Week 3</span><span>Week 4</span>
+            <span>Week 5</span><span>Week 6</span><span>Week 7</span><span>Week 8</span>
+          </div>
+        </div>
+        <div class="streak-cards">
+          <div class="streak-card">
+            <div class="streak-num">24</div>
+            <div class="streak-label">Day Streak 🔥</div>
+          </div>
+          <div class="streak-card">
+            <div class="streak-num">6/7</div>
+            <div class="streak-label">Weekly Goals</div>
+          </div>
+          <div class="streak-card">
+            <div class="streak-num">87%</div>
+            <div class="streak-label">Consistency</div>
+          </div>
+          <div class="streak-card">
+            <div class="streak-num">↓ 3.2<span style="font-size:1rem">kg</span></div>
+            <div class="streak-label">Total Lost</div>
+          </div>
+        </div>
+      </div>
+      <div class="fade-up">
+        <div class="section-label" style="margin-bottom:16px;">Advanced Analytics</div>
+        <h3 style="font-family:'Syne',sans-serif;font-size:1.8rem;font-weight:800;letter-spacing:-0.03em;color:var(--text);line-height:1.2;margin-bottom:16px;">See every pattern, catch every trend</h3>
+        <p class="section-desc">Corelytics transforms your daily logs into meaningful visual stories — helping you spot what's working, what to adjust, and where to push harder.</p>
+        <div style="margin-top:32px;display:flex;flex-direction:column;gap:16px;">
+          <div style="display:flex;align-items:center;gap:14px;padding:16px;background:var(--card-bg);border:1px solid var(--border);border-radius:14px;">
+            <span style="font-size:1.5rem;">📊</span>
+            <div>
+              <div style="font-weight:600;font-size:0.9rem;color:var(--text);margin-bottom:4px;">Weekly & Monthly Views</div>
+              <div style="font-size:0.8rem;color:var(--muted);">Toggle between short and long-term trend windows</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;padding:16px;background:var(--card-bg);border:1px solid var(--border);border-radius:14px;">
+            <span style="font-size:1.5rem;">📄</span>
+            <div>
+              <div style="font-weight:600;font-size:0.9rem;color:var(--text);margin-bottom:4px;">PDF Report Exports</div>
+              <div style="font-size:0.8rem;color:var(--muted);">Download detailed performance reports for sharing or review</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:14px;padding:16px;background:var(--card-bg);border:1px solid var(--border);border-radius:14px;">
+            <span style="font-size:1.5rem;">☁️</span>
+            <div>
+              <div style="font-weight:600;font-size:0.9rem;color:var(--text);margin-bottom:4px;">Cloud-Synced Access</div>
+              <div style="font-size:0.8rem;color:var(--muted);">Your data available anytime, any device, fully secure</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PAGES -->
+<section class="pages-section">
+  <div class="pages-inner">
+    <div class="section-label">Platform Structure</div>
+    <h2 class="section-title" style="margin:0 auto;">Six purpose-built pages</h2>
+    <div class="pages-grid fade-up">
+      <div class="page-pill active">🏠 Home</div>
+      <div class="page-pill">📊 Dashboard</div>
+      <div class="page-pill">🏋️ Workout Planner</div>
+      <div class="page-pill">🍽️ Nutrition Tracker</div>
+      <div class="page-pill">📈 Progress</div>
+      <div class="page-pill">✉️ About & Contact</div>
+    </div>
+  </div>
+</section>
+
+<!-- TECH -->
+<section>
+  <div class="tech-section fade-up">
+    <div class="section-label">Tech Stack</div>
+    <h2 class="section-title">Built for scale</h2>
+    <p class="section-desc">Corelytics is architected on a modern, API-ready stack designed for performance, scalability, and seamless future integrations.</p>
+    <div class="tech-grid">
+      <span class="tech-tag">⚛️ React / Next.js</span>
+      <span class="tech-tag">🟩 Node.js + Express</span>
+      <span class="tech-tag">🐍 Python + FastAPI</span>
+      <span class="tech-tag">🍃 MongoDB</span>
+      <span class="tech-tag">🐘 PostgreSQL</span>
+      <span class="tech-tag">🤖 OpenAI API</span>
+      <span class="tech-tag">☁️ Cloud Storage</span>
+      <span class="tech-tag">🔐 JWT Auth</span>
+      <span class="tech-tag">📄 PDF Export</span>
+      <span class="tech-tag">🌐 REST APIs</span>
+      <span class="tech-tag">📱 Responsive Design</span>
+      <span class="tech-tag">🔔 Push Notifications</span>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta-section">
+  <h2 class="cta-title">Ready to unlock your body's full potential?</h2>
+  <p class="cta-sub">Join thousands of users transforming their health with AI-powered insights, personalized plans, and real-time tracking.</p>
+  <a href="bmi-calculator.html" class="btn-primary">Start Free Today →</a>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-top">
+    <div class="footer-logo">Core<span>lytics</span></div>
+    <p>© 2025 Corelytics. AI-Powered Fitness & Nutrition Platform.</p>
+  </div>
+  <div class="footer-ticker-wrap">
+    <div class="footer-ticker" id="footer-ticker">
+      <!-- set 1 -->
+      <a href="#" class="footer-tick-item">Privacy Policy</a>
+      <span class="footer-tick-dot">·</span>
+      <a href="#" class="footer-tick-item">Terms of Service</a>
+      <span class="footer-tick-dot">·</span>
+      <a href="#" class="footer-tick-item">Contact Us</a>
+      <span class="footer-tick-dot">·</span>
+      <a href="#" class="footer-tick-item">Cookie Policy</a>
+      <span class="footer-tick-dot">·</span>
+      <a href="#" class="footer-tick-item">Accessibility</a>
+      <span class="footer-tick-dot">·</span>
+      <a href="#" class="footer-tick-item">Sitemap</a>
+      <span class="footer-tick-dot">·</span>
+      <a href="#" class="footer-tick-item">Support</a>
+      <span class="footer-tick-dot">·</span>
+      <a href="#" class="footer-tick-item">Careers</a>
+      <span class="footer-tick-dot">·</span>
+      <!-- set 2 (duplicate for seamless loop) -->
+      <a href="#" class="footer-tick-item">Privacy Policy</a>
+      <span class="footer-tick-dot">·</span>
+      <a href="#" class="footer-tick-item">Terms of Service</a>
+      <span class="footer-tick-dot">·</span>
+      <a href="#" class="footer-tick-item">Contact Us</a>
+      <span class="footer-tick-dot">·</span>
+      <a href="#" class="footer-tick-item">Cookie Policy</a>
+      <span class="footer-tick-dot">·</span>
+      <a href="#" class="footer-tick-item">Accessibility</a>
+      <span class="footer-tick-dot">·</span>
+      <a href="#" class="footer-tick-item">Sitemap</a>
+      <span class="footer-tick-dot">·</span>
+      <a href="#" class="footer-tick-item">Support</a>
+      <span class="footer-tick-dot">·</span>
+      <a href="#" class="footer-tick-item">Careers</a>
+      <span class="footer-tick-dot">·</span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  // Drag-to-scroll on ticker
+  const ticker = document.getElementById('ticker');
+  let isDown = false, startX, scrollLeft;
+
+  ticker.addEventListener('mousedown', e => {
+    isDown = true;
+    ticker.style.animationPlayState = 'paused';
+    startX = e.pageX - ticker.offsetLeft;
+    scrollLeft = ticker.parentElement.scrollLeft;
+  });
+  ticker.addEventListener('mouseleave', () => { isDown = false; });
+  ticker.addEventListener('mouseup', () => {
+    isDown = false;
+    ticker.style.animationPlayState = 'running';
+  });
+  ticker.addEventListener('mousemove', e => {
+    if (!isDown) return;
+    e.preventDefault();
+    const x = e.pageX - ticker.offsetLeft;
+    const walk = (x - startX) * 1.5;
+    ticker.parentElement.scrollLeft = scrollLeft - walk;
+  });
+
+  // Touch swipe support
+  let touchStartX = 0;
+  ticker.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; ticker.style.animationPlayState = 'paused'; });
+  ticker.addEventListener('touchend', () => { ticker.style.animationPlayState = 'running'; });
+  ticker.addEventListener('touchmove', e => {
+    const diff = touchStartX - e.touches[0].clientX;
+    ticker.parentElement.scrollLeft += diff * 0.5;
+  });
+
+  // Footer ticker drag-to-scroll
+  const footerTicker = document.getElementById('footer-ticker');
+  if (footerTicker) {
+    let ftDown = false, ftStartX, ftScrollLeft;
+    footerTicker.addEventListener('mousedown', e => {
+      ftDown = true;
+      footerTicker.style.animationPlayState = 'paused';
+      ftStartX = e.pageX - footerTicker.offsetLeft;
+      ftScrollLeft = footerTicker.parentElement.scrollLeft;
+    });
+    footerTicker.addEventListener('mouseleave', () => { ftDown = false; });
+    footerTicker.addEventListener('mouseup', () => { ftDown = false; footerTicker.style.animationPlayState = 'running'; });
+    footerTicker.addEventListener('mousemove', e => {
+      if (!ftDown) return;
+      e.preventDefault();
+      const x = e.pageX - footerTicker.offsetLeft;
+      footerTicker.parentElement.scrollLeft = ftScrollLeft - (x - ftStartX) * 1.5;
+    });
+  }
+
+  // Intersection Observer for fade-up animations
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(el => {
+      if (el.isIntersecting) {
+        el.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+  // Page pill interactivity
+  document.querySelectorAll('.page-pill').forEach(pill => {
+    pill.addEventListener('click', () => {
+      document.querySelectorAll('.page-pill').forEach(p => p.classList.remove('active'));
+      pill.classList.add('active');
+    });
+  });
+
+  // Day card interactivity
+  document.querySelectorAll('.day-card').forEach(card => {
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.day-card').forEach(c => c.classList.remove('active'));
+      card.classList.add('active');
+    });
+  });
+
+  // Chat send button
+  document.querySelector('.chat-send').addEventListener('click', () => {
+    const input = document.querySelector('.chat-input-row input');
+    if (input.value.trim()) {
+      const chatBody = document.querySelector('.chat-body');
+      const msg = document.createElement('div');
+      msg.className = 'msg user';
+      msg.textContent = input.value;
+      chatBody.appendChild(msg);
+      input.value = '';
+      chatBody.scrollTop = chatBody.scrollHeight;
+      setTimeout(() => {
+        const reply = document.createElement('div');
+        reply.className = 'msg ai';
+        reply.textContent = "Great question! Based on your profile and current progress, I'll generate a personalized recommendation for you. Give me a moment to analyze your data... 🧬";
+        chatBody.appendChild(reply);
+        chatBody.scrollTop = chatBody.scrollHeight;
+      }, 900);
+    }
+  });
+
+  document.querySelector('.chat-input-row input').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') document.querySelector('.chat-send').click();
+  });
+</script>
+</body>
+</html>
