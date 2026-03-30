@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fat Loss or Bulk? – Corelytics</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #080c0f;
+    --surface: #0d1318;
+    --surface2: #111a21;
+    --border: rgba(255,255,255,0.06);
+    --accent: #00e5a0;
+    --accent2: #00b8ff;
+    --accent3: #ff6b35;
+    --accent4: #ffd166;
+    --accent5: #bf7fff;
+    --text: #e8edf0;
+    --muted: #5a6a75;
+    --card-bg: rgba(255,255,255,0.03);
+    --cut:   #00b8ff;
+    --lean:  #00e5a0;
+    --recomp:#ffd166;
+    --bulk:  #ff6b35;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; overflow-x: hidden; }
+
+  body::before { content:''; position:fixed; inset:0; background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E"); pointer-events:none; z-index:999; opacity:0.4; }
+
+  .blob { position:fixed; pointer-events:none; z-index:0; border-radius:50%; }
+  .blob-1 { top:-200px; left:-150px; width:700px; height:700px; background:radial-gradient(circle,rgba(255,107,53,0.06),transparent 70%); }
+  .blob-2 { bottom:-200px; right:-150px; width:700px; height:700px; background:radial-gradient(circle,rgba(0,229,160,0.05),transparent 70%); }
+  .blob-3 { top:40%; left:50%; transform:translate(-50%,-50%); width:500px; height:300px; background:radial-gradient(ellipse,rgba(191,127,255,0.03),transparent 70%); }
+
+  /* NAV */
+  nav { position:fixed; top:0; left:0; right:0; z-index:100; display:flex; align-items:center; justify-content:space-between; padding:20px 6vw; background:rgba(8,12,15,0.88); backdrop-filter:blur(20px); border-bottom:1px solid var(--border); }
+  .logo { font-family:'Syne',sans-serif; font-weight:800; font-size:1.5rem; letter-spacing:-0.02em; color:var(--text); text-decoration:none; }
+  .logo span { color:var(--accent); }
+  .nav-back { display:flex; align-items:center; gap:8px; color:var(--muted); text-decoration:none; font-size:0.875rem; font-weight:500; transition:color 0.2s; }
+  .nav-back:hover { color:var(--text); }
+
+  /* PAGE */
+  .page { position:relative; z-index:1; padding:110px 5vw 80px; max-width:1140px; margin:0 auto; }
+
+  /* HERO */
+  .hero { text-align:center; padding:50px 0 64px; animation:fadeUp 0.7s ease both; }
+  .hero-badge { display:inline-flex; align-items:center; gap:8px; background:rgba(255,107,53,0.08); border:1px solid rgba(255,107,53,0.22); border-radius:100px; padding:6px 16px; font-size:0.75rem; font-weight:600; color:var(--accent3); margin-bottom:24px; letter-spacing:0.06em; text-transform:uppercase; }
+  .hero-badge .dot { width:6px; height:6px; background:var(--accent3); border-radius:50%; animation:pulse 2s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1);}50%{opacity:0.4;transform:scale(0.8);} }
+  .hero-title { font-family:'Syne',sans-serif; font-size:clamp(2.4rem,5vw,4.2rem); font-weight:800; letter-spacing:-0.04em; line-height:1.05; }
+  .hero-title .cut  { color:var(--cut); }
+  .hero-title .bulk { color:var(--bulk); }
+  .hero-sub { margin-top:16px; font-size:1rem; color:var(--muted); font-weight:300; max-width:540px; margin-left:auto; margin-right:auto; line-height:1.75; }
+
+  .vs-row { display:flex; align-items:center; justify-content:center; gap:20px; margin:32px 0 48px; flex-wrap:wrap; }
+  .vs-pill { display:flex; align-items:center; gap:10px; padding:10px 22px; border-radius:100px; font-size:0.85rem; font-weight:600; border:1.5px solid; }
+  .vs-pill.cut-p  { background:rgba(0,184,255,0.08);  border-color:rgba(0,184,255,0.25);  color:var(--cut); }
+  .vs-pill.lean-p { background:rgba(0,229,160,0.08);  border-color:rgba(0,229,160,0.25);  color:var(--lean); }
+  .vs-pill.bulk-p { background:rgba(255,107,53,0.08); border-color:rgba(255,107,53,0.25); color:var(--bulk); }
+  .vs-sep { font-size:1.2rem; color:var(--muted); }
+
+  /* MAIN GRID */
+  .main-grid { display:grid; grid-template-columns:380px 1fr; gap:24px; align-items:start; }
+
+  /* SUPPLEMENT BUTTON */
+  .supp-btn-wrap {
+    display: flex;
+    justify-content: center;
+    margin: -20px 0 40px;
+    animation: fadeUp 0.7s 0.05s ease both;
+  }
+
+  .supp-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 11px 26px;
+    border-radius: 100px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #d0aaff;
+    text-decoration: none;
+    background: rgba(191,127,255,0.07);
+    border: 1.5px solid rgba(191,127,255,0.25);
+    overflow: hidden;
+    transition: color 0.25s, border-color 0.25s, background 0.25s, box-shadow 0.25s, transform 0.2s;
+    cursor: pointer;
+  }
+
+  .supp-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 100px;
+    background: radial-gradient(ellipse at 50% -10%, rgba(191,127,255,0.22) 0%, transparent 65%);
+    opacity: 0;
+    transition: opacity 0.3s;
+    pointer-events: none;
+  }
+
+  .supp-btn:hover {
+    color: #bf7fff;
+    border-color: rgba(191,127,255,0.55);
+    background: rgba(191,127,255,0.12);
+    box-shadow: 0 0 24px rgba(191,127,255,0.2), 0 2px 12px rgba(191,127,255,0.1);
+    transform: translateY(-2px);
+  }
+
+  .supp-btn:hover::before { opacity: 1; }
+
+  .supp-btn:active { transform: translateY(0px); }
+
+  .supp-btn-badge {
+    font-size: 0.6rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    padding: 2px 8px;
+    border-radius: 100px;
+    background: rgba(191,127,255,0.16);
+    color: #bf7fff;
+    border: 1px solid rgba(191,127,255,0.28);
+  }
+
+  .supp-btn-arrow {
+    opacity: 0.45;
+    font-size: 0.8rem;
+    transition: opacity 0.2s, transform 0.2s;
+  }
+
+  .supp-btn:hover .supp-btn-arrow {
+    opacity: 0.8;
+    transform: translateX(3px);
+  }
+
+  /* INPUT CARD */
+  .input-card { background:var(--card-bg); border:1.5px solid var(--border); border-top:3px solid var(--accent3); border-radius:28px; padding:32px 28px; position:sticky; top:92px; animation:fadeUp 0.7s 0.1s ease both; }
+  .c-label { font-size:0.7rem; font-weight:700; letter-spacing:0.12em; text-transform:uppercase; color:var(--accent3); margin-bottom:20px; display:block; }
+  .field { margin-bottom:20px; }
+  .field-lbl { font-size:0.75rem; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.07em; display:flex; justify-content:space-between; align-items:center; margin-bottom:9px; }
+  .field-lbl .fv { font-family:'Syne',sans-serif; font-size:0.95rem; font-weight:800; color:var(--text); text-transform:none; letter-spacing:0; }
+
+  input[type="range"] { -webkit-appearance:none; appearance:none; width:100%; height:4px; border-radius:100px; background:rgba(255,255,255,0.08); outline:none; cursor:pointer; }
+  input[type="range"]::-webkit-slider-thumb { -webkit-appearance:none; width:19px; height:19px; border-radius:50%; background:var(--accent3); border:3px solid var(--bg); box-shadow:0 0 12px rgba(255,107,53,0.5); cursor:pointer; }
+  .slider-range { display:flex; justify-content:space-between; font-size:0.67rem; color:var(--muted); margin-top:5px; }
+
+  .g-toggle { display:flex; background:rgba(255,255,255,0.04); border:1px solid var(--border); border-radius:100px; padding:3px; gap:2px; margin-bottom:20px; }
+  .g-btn { flex:1; padding:8px; border-radius:100px; border:none; background:transparent; color:var(--muted); font-family:'DM Sans',sans-serif; font-size:0.82rem; font-weight:500; cursor:pointer; transition:all 0.2s; text-align:center; }
+  .g-btn.active { background:var(--accent3); color:#fff; font-weight:700; }
+
+  .check-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:20px; }
+  .check-item { display:flex; align-items:center; gap:8px; padding:10px 12px; background:rgba(255,255,255,0.03); border:1.5px solid var(--border); border-radius:12px; cursor:pointer; transition:all 0.2s; font-size:0.8rem; color:var(--muted); user-select:none; }
+  .check-item.sel { border-color:var(--accent3); background:rgba(255,107,53,0.07); color:var(--text); }
+  .check-item .ci-icon { font-size:1rem; }
+  .check-box { width:14px; height:14px; border-radius:4px; border:1.5px solid var(--border); margin-left:auto; flex-shrink:0; transition:all 0.2s; }
+  .check-item.sel .check-box { background:var(--accent3); border-color:var(--accent3); }
+
+  .sselect { width:100%; background:rgba(255,255,255,0.04); border:1.5px solid var(--border); border-radius:12px; padding:10px 14px; color:var(--text); font-family:'DM Sans',sans-serif; font-size:0.875rem; outline:none; cursor:pointer; appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235a6a75' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 14px center; padding-right:36px; }
+  .sselect option { background:#111a21; }
+  .sselect:focus { border-color:var(--accent3); }
+
+  .divider { height:1px; background:var(--border); margin:20px 0; }
+
+  .analyse-btn { width:100%; background:var(--accent3); color:#fff; font-family:'DM Sans',sans-serif; font-weight:800; font-size:1rem; padding:15px; border-radius:100px; border:none; cursor:pointer; margin-top:24px; transition:transform 0.2s,box-shadow 0.2s; box-shadow:0 0 36px rgba(255,107,53,0.25); display:flex; align-items:center; justify-content:center; gap:10px; }
+  .analyse-btn:hover { transform:translateY(-2px); box-shadow:0 0 56px rgba(255,107,53,0.45); }
+
+  /* OUTPUT */
+  .output-col { display:flex; flex-direction:column; gap:20px; animation:fadeUp 0.7s 0.15s ease both; }
+
+  /* VERDICT */
+  .verdict-card { border-radius:24px; border:2px solid var(--border); overflow:hidden; transition:border-color 0.5s,background 0.5s; }
+  .verdict-top { padding:28px 28px 24px; display:flex; align-items:flex-start; gap:20px; }
+  .v-emoji { font-size:3rem; flex-shrink:0; line-height:1; }
+  .v-info { flex:1; }
+  .v-tag { display:inline-block; font-size:0.7rem; font-weight:700; letter-spacing:0.1em; text-transform:uppercase; padding:4px 12px; border-radius:100px; margin-bottom:10px; }
+  .v-title { font-family:'Syne',sans-serif; font-size:1.6rem; font-weight:800; letter-spacing:-0.03em; line-height:1.1; color:var(--text); }
+  .v-desc  { font-size:0.875rem; color:var(--muted); margin-top:10px; font-weight:300; line-height:1.75; max-width:500px; }
+
+  .score-row { display:grid; grid-template-columns:repeat(3,1fr); border-top:1px solid var(--border); }
+  .score-cell { padding:16px 20px; border-right:1px solid var(--border); text-align:center; }
+  .score-cell:last-child { border-right:none; }
+  .score-val { font-family:'Syne',sans-serif; font-size:1.4rem; font-weight:800; letter-spacing:-0.04em; }
+  .score-lbl { font-size:0.68rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.06em; margin-top:4px; }
+
+  /* SPECTRUM */
+  .spectrum-card { background:var(--card-bg); border:1px solid var(--border); border-radius:20px; padding:24px 26px; }
+  .spec-title { font-family:'Syne',sans-serif; font-size:0.95rem; font-weight:700; color:var(--text); margin-bottom:20px; }
+  .spectrum-bar { height:12px; border-radius:100px; background:linear-gradient(to right,var(--cut) 0%,var(--lean) 30%,var(--accent4) 58%,var(--bulk) 100%); position:relative; margin-bottom:8px; }
+  .spec-needle { position:absolute; top:50%; transform:translate(-50%,-50%); width:20px; height:20px; background:var(--text); border-radius:50%; border:3px solid var(--bg); box-shadow:0 0 10px rgba(0,0,0,0.6); transition:left 0.8s cubic-bezier(0.34,1.2,0.64,1); }
+  .spec-labels { display:flex; justify-content:space-between; font-size:0.7rem; color:var(--muted); }
+  .zone-pills { display:flex; gap:8px; margin-top:16px; flex-wrap:wrap; }
+  .zone-pill { padding:5px 14px; border-radius:100px; font-size:0.72rem; font-weight:600; border:1px solid; }
+
+  /* STRATEGY */
+  .strategy-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .strat-card { background:var(--card-bg); border:1px solid var(--border); border-radius:16px; padding:18px; transition:border-color 0.2s; }
+  .strat-card:hover { border-color:rgba(255,255,255,0.12); }
+  .strat-card.active-strat { border-color:var(--accent3); background:rgba(255,107,53,0.04); }
+  .strat-icon { font-size:1.3rem; margin-bottom:10px; }
+  .strat-name { font-family:'Syne',sans-serif; font-size:0.9rem; font-weight:700; color:var(--text); margin-bottom:6px; }
+  .strat-desc { font-size:0.78rem; color:var(--muted); line-height:1.6; font-weight:300; }
+
+  /* TIMELINE */
+  .timeline-card { background:var(--card-bg); border:1px solid var(--border); border-radius:20px; padding:24px 26px; }
+  .tl-title { font-family:'Syne',sans-serif; font-size:0.95rem; font-weight:700; color:var(--text); margin-bottom:20px; }
+  .tl-row { display:flex; gap:14px; margin-bottom:16px; align-items:flex-start; }
+  .tl-row:last-child { margin-bottom:0; }
+  .tl-left { display:flex; flex-direction:column; align-items:center; flex-shrink:0; }
+  .tl-dot { width:32px; height:32px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:0.8rem; font-weight:700; flex-shrink:0; border:2px solid; }
+  .tl-line { width:2px; flex:1; min-height:24px; background:var(--border); margin:4px 0; }
+  .tl-body { flex:1; padding-top:4px; }
+  .tl-phase { font-family:'Syne',sans-serif; font-size:0.88rem; font-weight:700; color:var(--text); margin-bottom:3px; }
+  .tl-detail { font-size:0.78rem; color:var(--muted); line-height:1.6; font-weight:300; }
+
+  /* MACROS */
+  .macro-card { background:var(--card-bg); border:1px solid var(--border); border-radius:20px; padding:24px 26px; }
+  .macro-title { font-family:'Syne',sans-serif; font-size:0.95rem; font-weight:700; color:var(--text); margin-bottom:20px; }
+  .macro-row { display:flex; align-items:center; gap:12px; margin-bottom:12px; font-size:0.82rem; }
+  .macro-row:last-child { margin-bottom:0; }
+  .macro-lbl { color:var(--muted); min-width:72px; }
+  .macro-track { flex:1; height:6px; background:rgba(255,255,255,0.06); border-radius:100px; overflow:hidden; }
+  .macro-fill { height:100%; border-radius:100px; transition:width 0.8s cubic-bezier(0.34,1.2,0.64,1); }
+  .macro-val { color:var(--text); font-weight:600; min-width:52px; text-align:right; }
+
+  /* CHECKLIST */
+  .check-card { background:var(--card-bg); border:1px solid var(--border); border-radius:20px; padding:24px 26px; }
+  .check-title { font-family:'Syne',sans-serif; font-size:0.95rem; font-weight:700; color:var(--text); margin-bottom:16px; }
+  .check-li { display:flex; align-items:flex-start; gap:12px; padding:10px 0; border-bottom:1px solid var(--border); font-size:0.82rem; }
+  .check-li:last-child { border-bottom:none; }
+  .cl-icon { font-size:1rem; flex-shrink:0; margin-top:1px; }
+  .cl-text { color:var(--text); line-height:1.5; font-weight:300; }
+
+  /* CTA */
+  .cta-card { background:linear-gradient(135deg,rgba(255,107,53,0.06),rgba(0,229,160,0.04)); border:1.5px solid var(--border); border-radius:20px; padding:28px; text-align:center; }
+  .cta-card h3 { font-family:'Syne',sans-serif; font-size:1.1rem; font-weight:800; color:var(--text); letter-spacing:-0.02em; margin-bottom:8px; }
+  .cta-card p { font-size:0.82rem; color:var(--muted); font-weight:300; margin-bottom:20px; line-height:1.6; }
+  .cta-btns { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+  .cta-btn-a { background:var(--accent); color:#000; font-family:'DM Sans',sans-serif; font-weight:700; font-size:0.875rem; padding:12px 24px; border-radius:100px; text-decoration:none; transition:opacity 0.2s; }
+  .cta-btn-a:hover { opacity:0.85; }
+  .cta-btn-b { background:transparent; color:var(--muted); font-family:'DM Sans',sans-serif; font-weight:500; font-size:0.875rem; padding:12px 24px; border-radius:100px; text-decoration:none; border:1px solid var(--border); transition:all 0.2s; }
+  .cta-btn-b:hover { border-color:rgba(255,255,255,0.15); color:var(--text); }
+
+  /* SUPPLEMENT CTA BUTTON */
+  .supplement-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 11px 26px;
+    border-radius: 100px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #d0aaff;
+    text-decoration: none;
+    background: rgba(191,127,255,0.07);
+    border: 1.5px solid rgba(191,127,255,0.25);
+    transition: color 0.25s, border-color 0.25s, background 0.25s, box-shadow 0.25s, transform 0.2s;
+  }
+  .supplement-btn:hover {
+    color: #bf7fff;
+    border-color: rgba(191,127,255,0.55);
+    background: rgba(191,127,255,0.12);
+    box-shadow: 0 0 24px rgba(191,127,255,0.2), 0 2px 12px rgba(191,127,255,0.1);
+    transform: translateY(-2px);
+  }
+
+  @keyframes fadeUp { from{opacity:0;transform:translateY(22px);}to{opacity:1;transform:translateY(0);} }
+
+  @media (max-width:860px) {
+    .main-grid { grid-template-columns:1fr; }
+    .input-card { position:static; }
+    .strategy-grid { grid-template-columns:1fr; }
+  }
+  @media (max-width:500px) {
+    .page { padding:100px 4vw 60px; }
+    .score-row { grid-template-columns:1fr 1fr; }
+    .score-cell:nth-child(2) { border-right:none; }
+    .score-cell:nth-child(3) { border-top:1px solid var(--border); grid-column:span 2; }
+  }
+</style>
+</head>
+<body>
+
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="index.html" class="logo">Core<span>lytics</span></a>
+  <a href="bmi-calculator.html" class="nav-back">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M10 3L5 8l5 5"/></svg>
+    Back to BMI Calculator
+  </a>
+</nav>
+
+<div class="page">
+
+  <!-- HERO -->
+  <div class="hero">
+    <div class="hero-badge"><div class="dot"></div> Smart Body Composition Analyser</div>
+    <h1 class="hero-title"><span class="cut">Fat Loss</span> or <span class="bulk">Bulk?</span></h1>
+    <p class="hero-sub">Enter your body fat percentage and training details. Our smart algorithm analyses your body composition and tells you exactly which phase — cut, lean bulk, recomp, or full bulk — will give you the best results right now.</p>
+    <div class="vs-row">
+      <div class="vs-pill cut-p">💧 Fat Loss / Cut</div>
+      <span class="vs-sep">vs</span>
+      <div class="vs-pill lean-p">⚡ Lean Bulk</div>
+      <span class="vs-sep">vs</span>
+      <div class="vs-pill bulk-p">💪 Full Bulk</div>
+    </div>
+  </div>
+
+  <!-- SUPPLEMENT BUTTON -->
+  <div class="supp-btn-wrap">
+    <a href="best-supplements.html" target="_blank" class="supplement-btn">
+      💊 Best Supplements for Your Goal
+      <span class="supp-btn-badge">NEW</span>
+      <span class="supp-btn-arrow">→</span>
+    </a>
+  </div>
+
+  <!-- MAIN GRID -->
+  <div class="main-grid">
+
+    <!-- LEFT: INPUTS -->
+    <div class="input-card">
+      <span class="c-label">Your Body Data</span>
+
+      <div class="field">
+        <div class="field-lbl">Biological Sex</div>
+        <div class="g-toggle">
+          <button class="g-btn active" id="g-m" onclick="setG('male')">♂ Male</button>
+          <button class="g-btn" id="g-f" onclick="setG('female')">♀ Female</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="field-lbl">Body Fat % <span class="fv" id="bf-disp">18%</span></div>
+        <input type="range" id="bf-in" min="5" max="50" step="0.5" value="18" oninput="document.getElementById('bf-disp').textContent=parseFloat(this.value).toFixed(1)+'%';analyse()">
+        <div class="slider-range"><span>5%</span><span>27%</span><span>50%</span></div>
+      </div>
+
+      <div class="field">
+        <div class="field-lbl">Weight <span class="fv" id="wt-disp">75 kg</span></div>
+        <input type="range" id="wt-in" min="40" max="180" value="75" oninput="document.getElementById('wt-disp').textContent=this.value+' kg';analyse()">
+        <div class="slider-range"><span>40</span><span>110</span><span>180 kg</span></div>
+      </div>
+
+      <div class="field">
+        <div class="field-lbl">Height <span class="fv" id="ht-disp">175 cm</span></div>
+        <input type="range" id="ht-in" min="140" max="220" value="175" oninput="document.getElementById('ht-disp').textContent=this.value+' cm';analyse()">
+        <div class="slider-range"><span>140</span><span>180</span><span>220 cm</span></div>
+      </div>
+
+      <div class="field">
+        <div class="field-lbl">Age <span class="fv" id="age-disp">28 yrs</span></div>
+        <input type="range" id="age-in" min="15" max="70" value="28" oninput="document.getElementById('age-disp').textContent=this.value+' yrs';analyse()">
+        <div class="slider-range"><span>15</span><span>42</span><span>70 yrs</span></div>
+      </div>
+
+      <div class="divider"></div>
+      <span class="c-label" style="margin-bottom:14px;">Goals &amp; Lifestyle</span>
+
+      <div class="field">
+        <div class="field-lbl" style="margin-bottom:8px;">Your Priority</div>
+        <select class="sselect" id="priority-in" onchange="analyse()">
+          <option value="aesthetics">💎 Aesthetics — Look as good as possible</option>
+          <option value="health">❤️ Health &amp; Longevity</option>
+          <option value="performance">🏃 Athletic Performance</option>
+          <option value="strength">🏋️ Pure Strength &amp; Power</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <div class="field-lbl" style="margin-bottom:8px;">Training Experience</div>
+        <select class="sselect" id="exp-in" onchange="analyse()">
+          <option value="beginner">🌱 Beginner (&lt;1 year)</option>
+          <option value="intermediate" selected>🔄 Intermediate (1–3 years)</option>
+          <option value="advanced">🏆 Advanced (3+ years)</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <div class="field-lbl" style="margin-bottom:10px;">Lifestyle Factors</div>
+        <div class="check-grid">
+          <div class="check-item sel" data-val="sleep"      onclick="toggleFactor(this)"><span class="ci-icon">😴</span> Good Sleep<div class="check-box"></div></div>
+          <div class="check-item"     data-val="stress"     onclick="toggleFactor(this)"><span class="ci-icon">😰</span> High Stress<div class="check-box"></div></div>
+          <div class="check-item sel" data-val="consistent" onclick="toggleFactor(this)"><span class="ci-icon">📅</span> Consistent<div class="check-box"></div></div>
+          <div class="check-item"     data-val="sedentary"  onclick="toggleFactor(this)"><span class="ci-icon">🛋️</span> Sedentary Job<div class="check-box"></div></div>
+        </div>
+      </div>
+
+      <button class="analyse-btn" onclick="analyse()"><span>🔬</span> Analyse My Body</button>
+    </div>
+
+    <!-- RIGHT: OUTPUT -->
+    <div class="output-col">
+
+      <!-- VERDICT -->
+      <div class="verdict-card" id="verdict-card">
+        <div class="verdict-top">
+          <div class="v-emoji" id="v-emoji">🔬</div>
+          <div class="v-info">
+            <div class="v-tag" id="v-tag">Analysing...</div>
+            <div class="v-title" id="v-title">Adjust your inputs to see your recommendation</div>
+            <div class="v-desc"  id="v-desc">Use the sliders on the left to enter your body fat percentage, weight, and other details. Your personalised recommendation will appear here instantly.</div>
+          </div>
+        </div>
+        <div class="score-row">
+          <div class="score-cell"><div class="score-val" id="sc-leanmass">—</div><div class="score-lbl">Lean Mass (kg)</div></div>
+          <div class="score-cell"><div class="score-val" id="sc-fatmass">—</div><div class="score-lbl">Fat Mass (kg)</div></div>
+          <div class="score-cell"><div class="score-val" id="sc-target">—</div><div class="score-lbl">Target BF%</div></div>
+        </div>
+      </div>
+
+      <!-- SPECTRUM -->
+      <div class="spectrum-card">
+        <div class="spec-title">📊 Your Position on the Body Composition Spectrum</div>
+        <div class="spectrum-bar"><div class="spec-needle" id="spec-needle" style="left:40%;"></div></div>
+        <div class="spec-labels"><span>Very Lean</span><span>Lean Bulk Zone</span><span>Recomp</span><span>Cut First</span></div>
+        <div class="zone-pills">
+          <div class="zone-pill" style="background:rgba(0,184,255,0.1);border-color:rgba(0,184,255,0.25);color:var(--cut);">💧 Cut: &gt;20% (M) / &gt;30% (F)</div>
+          <div class="zone-pill" style="background:rgba(0,229,160,0.1);border-color:rgba(0,229,160,0.25);color:var(--lean);">⚡ Lean Bulk: 12–17% (M) / 20–27% (F)</div>
+          <div class="zone-pill" style="background:rgba(255,107,53,0.1);border-color:rgba(255,107,53,0.25);color:var(--bulk);">💪 Bulk: &lt;12% (M) / &lt;20% (F)</div>
+        </div>
+      </div>
+
+      <!-- STRATEGY COMPARISON -->
+      <div>
+        <div style="font-family:'Syne',sans-serif;font-size:0.95rem;font-weight:700;color:var(--text);margin-bottom:14px;">🎯 Strategy Comparison</div>
+        <div class="strategy-grid">
+          <div class="strat-card" id="strat-cut">
+            <div class="strat-icon">🔥</div>
+            <div class="strat-name">Fat Loss / Cut</div>
+            <div class="strat-desc">Caloric deficit of 300–500 kcal/day. High protein intake. Cardio + strength training. Goal: reduce body fat while preserving lean mass.</div>
+          </div>
+          <div class="strat-card" id="strat-lean">
+            <div class="strat-icon">⚡</div>
+            <div class="strat-name">Lean Bulk</div>
+            <div class="strat-desc">Small surplus of 150–250 kcal/day. Progressive overload focus. Slow, quality muscle gain with minimal fat accumulation.</div>
+          </div>
+          <div class="strat-card" id="strat-recomp">
+            <div class="strat-icon">🔄</div>
+            <div class="strat-name">Body Recomposition</div>
+            <div class="strat-desc">Eat at maintenance. Build muscle while losing fat simultaneously. Best for beginners or those returning after a break.</div>
+          </div>
+          <div class="strat-card" id="strat-bulk">
+            <div class="strat-icon">💪</div>
+            <div class="strat-name">Full Bulk</div>
+            <div class="strat-desc">Surplus of 300–500 kcal/day. Aggressive muscle growth phase. Best at low body fat. Expect some fat gain alongside muscle.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- MACRO TARGETS -->
+      <div class="macro-card">
+        <div class="macro-title">🍽️ Recommended Daily Macro Targets</div>
+        <div class="macro-row">
+          <span class="macro-lbl">Protein</span>
+          <div class="macro-track"><div class="macro-fill" id="mac-prot" style="width:35%;background:var(--accent);"></div></div>
+          <span class="macro-val" id="mac-prot-v">—</span>
+        </div>
+        <div class="macro-row">
+          <span class="macro-lbl">Carbs</span>
+          <div class="macro-track"><div class="macro-fill" id="mac-carb" style="width:45%;background:var(--accent2);"></div></div>
+          <span class="macro-val" id="mac-carb-v">—</span>
+        </div>
+        <div class="macro-row">
+          <span class="macro-lbl">Fats</span>
+          <div class="macro-track"><div class="macro-fill" id="mac-fat" style="width:20%;background:var(--accent4);"></div></div>
+          <span class="macro-val" id="mac-fat-v">—</span>
+        </div>
+        <div class="macro-row" style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border);">
+          <span class="macro-lbl" style="color:var(--text);font-weight:600;">Total kcal</span>
+          <div class="macro-track"><div class="macro-fill" id="mac-kcal-bar" style="width:60%;background:var(--accent3);"></div></div>
+          <span class="macro-val" id="mac-kcal-v" style="color:var(--accent3);">—</span>
+        </div>
+      </div>
+
+      <!-- PHASE TIMELINE -->
+      <div class="timeline-card">
+        <div class="tl-title" id="tl-title">📅 Your Recommended Phase Plan</div>
+        <div id="tl-content"></div>
+      </div>
+
+      <!-- CHECKLIST -->
+      <div class="check-card">
+        <div class="check-title" id="cl-title">✅ Your Action Checklist</div>
+        <div id="cl-content"></div>
+      </div>
+
+      <!-- CTA -->
+      <div class="cta-card">
+        <h3>Ready to build your exact workout plan?</h3>
+        <p>Our AI will generate a complete, personalised training program based on your body composition and goal — sets, reps, weekly splits, nutrition tips, and milestones.</p>
+        <div class="cta-btns">
+          <a href="workout-plan.html" class="cta-btn-a">🏋️ Generate Workout Plan →</a>
+          <a href="bmi-calculator.html" class="cta-btn-b">← Back to BMI Calculator</a>
+        </div>
+      </div>
+
+    </div><!-- /output-col -->
+  </div><!-- /main-grid -->
+</div><!-- /page -->
+
+<script>
+  let gender = 'male';
+  const activeFactors = new Set(['sleep', 'consistent']);
+
+  function setG(g) {
+    gender = g;
+    document.getElementById('g-m').classList.toggle('active', g === 'male');
+    document.getElementById('g-f').classList.toggle('active', g === 'female');
+    analyse();
+  }
+
+  function toggleFactor(el) {
+    const v = el.dataset.val;
+    el.classList.toggle('sel');
+    activeFactors.has(v) ? activeFactors.delete(v) : activeFactors.add(v);
+    analyse();
+  }
+
+  function analyse() {
+    const bf       = parseFloat(document.getElementById('bf-in').value);
+    const wt       = parseFloat(document.getElementById('wt-in').value);
+    const ht       = parseFloat(document.getElementById('ht-in').value);
+    const age      = parseFloat(document.getElementById('age-in').value);
+    const priority = document.getElementById('priority-in').value;
+    const exp      = document.getElementById('exp-in').value;
+
+    const fatMass  = +(wt * bf / 100).toFixed(1);
+    const leanMass = +(wt - fatMass).toFixed(1);
+
+    const bmr  = gender === 'male'
+      ? 10 * wt + 6.25 * ht - 5 * age + 5
+      : 10 * wt + 6.25 * ht - 5 * age - 161;
+    const tdee = Math.round(bmr * 1.55);
+
+    const T = gender === 'male'
+      ? { veryLean:10, leanBulk:15, recomp:18, cut:20, hardCut:28 }
+      : { veryLean:18, leanBulk:22, recomp:26, cut:30, hardCut:38 };
+
+    const highStress = activeFactors.has('stress');
+    const goodSleep  = activeFactors.has('sleep');
+
+    let phase;
+    if      (bf <= T.veryLean) { phase = 'bulk'; }
+    else if (bf <= T.leanBulk) { phase = (priority === 'strength' || exp === 'beginner') ? 'bulk' : 'lean_bulk'; }
+    else if (bf <= T.recomp)   { phase = (priority === 'aesthetics' || priority === 'health') ? 'lean_bulk' : 'recomp'; }
+    else if (bf <= T.cut)      { phase = highStress ? 'recomp' : 'cut'; }
+    else                       { phase = 'cut'; }
+
+    if (priority === 'strength' && bf <= T.recomp) phase = 'bulk';
+    if (priority === 'health'   && bf >= T.cut)    phase = 'cut';
+    if (!goodSleep && phase === 'bulk')             phase = 'lean_bulk';
+
+    const targetBF = gender === 'male'
+      ? { cut:'12–15%', lean_bulk:'13–16%', recomp:'14–18%', bulk:'10–13%' }[phase]
+      : { cut:'20–24%', lean_bulk:'21–25%', recomp:'22–26%', bulk:'18–22%' }[phase];
+
+    const targetKcal = { cut: tdee-450, lean_bulk: tdee+200, recomp: tdee, bulk: tdee+400 }[phase];
+    const protG = Math.round(leanMass * (phase === 'cut' ? 2.4 : 2.0));
+    const fatG  = Math.round(wt * 0.9);
+    const carbG = Math.round((targetKcal - protG*4 - fatG*9) / 4);
+
+    const verdicts = {
+      cut: {
+        emoji:'🔥', tag:'Fat Loss Phase Recommended',
+        tagColor:'rgba(255,107,53,0.15)', tagText:'var(--bulk)',
+        cardBorder:'rgba(255,107,53,0.3)', cardBg:'rgba(255,107,53,0.04)',
+        title: bf >= T.hardCut ? 'Prioritise Fat Loss — Start Here' : 'A Cut Will Unlock Your Best Results',
+        desc:`At ${bf.toFixed(1)}% body fat, reducing fat first is the smartest move. A clean cut to ${targetBF} will drastically improve how you look and feel, boost your insulin sensitivity, and create a stronger hormonal foundation for your next muscle-building phase.`
+      },
+      lean_bulk: {
+        emoji:'⚡', tag:'Lean Bulk Recommended',
+        tagColor:'rgba(0,229,160,0.12)', tagText:'var(--lean)',
+        cardBorder:'rgba(0,229,160,0.3)', cardBg:'rgba(0,229,160,0.04)',
+        title:'Lean Bulk — Build Muscle Without Losing Definition',
+        desc:`At ${bf.toFixed(1)}% body fat you're in the ideal zone for a lean bulk. A modest caloric surplus of +200 kcal/day with progressive overload will build quality muscle while keeping you lean. Aim to reach ${targetBF} body fat through slow, controlled muscle gain.`
+      },
+      recomp: {
+        emoji:'🔄', tag:'Body Recomposition Recommended',
+        tagColor:'rgba(255,209,102,0.12)', tagText:'var(--accent4)',
+        cardBorder:'rgba(255,209,102,0.3)', cardBg:'rgba(255,209,102,0.04)',
+        title:'Recomposition — Lose Fat & Gain Muscle Simultaneously',
+        desc:`At ${bf.toFixed(1)}% you're in the recomposition sweet spot — where your body can burn fat for energy while using dietary protein to build muscle at the same time. Eat at maintenance (${tdee} kcal), keep protein high, and train consistently with progressive overload.`
+      },
+      bulk: {
+        emoji:'💪', tag:'Full Bulk Recommended',
+        tagColor:'rgba(0,184,255,0.12)', tagText:'var(--cut)',
+        cardBorder:'rgba(0,184,255,0.3)', cardBg:'rgba(0,184,255,0.04)',
+        title:"You're Lean Enough — Time to Build Mass",
+        desc:`At ${bf.toFixed(1)}% body fat your foundation is solid. This is the optimal window to enter a dedicated muscle-building phase. A controlled caloric surplus (+300–450 kcal) with heavy compound training will maximise lean muscle gain. Monitor body fat monthly and cut when you approach ${gender === 'male' ? '18%' : '28%'}.`
+      }
+    };
+
+    const vd = verdicts[phase];
+
+    document.getElementById('v-emoji').textContent = vd.emoji;
+    document.getElementById('v-title').textContent = vd.title;
+    document.getElementById('v-desc').textContent  = vd.desc;
+    const vtag = document.getElementById('v-tag');
+    vtag.textContent = vd.tag; vtag.style.background = vd.tagColor; vtag.style.color = vd.tagText;
+    const vc = document.getElementById('verdict-card');
+    vc.style.borderColor = vd.cardBorder; vc.style.background = vd.cardBg;
+
+    document.getElementById('sc-leanmass').textContent = leanMass + ' kg';
+    document.getElementById('sc-fatmass').textContent  = fatMass  + ' kg';
+    document.getElementById('sc-target').textContent   = targetBF;
+
+    const needlePct = Math.max(2, Math.min(97, ((bf-5)/45)*100));
+    document.getElementById('spec-needle').style.left = needlePct + '%';
+
+    ['cut','lean','recomp','bulk'].forEach(k => document.getElementById('strat-'+k).classList.remove('active-strat'));
+    const stratMap = { cut:'cut', lean_bulk:'lean', recomp:'recomp', bulk:'bulk' };
+    document.getElementById('strat-'+stratMap[phase]).classList.add('active-strat');
+
+    const maxMac = Math.max(protG, carbG, fatG) + 20;
+    document.getElementById('mac-prot').style.width     = Math.round(protG/maxMac*100)+'%';
+    document.getElementById('mac-carb').style.width     = Math.round(carbG/maxMac*100)+'%';
+    document.getElementById('mac-fat').style.width      = Math.round(fatG/maxMac*100)+'%';
+    document.getElementById('mac-kcal-bar').style.width = '70%';
+    document.getElementById('mac-prot-v').textContent   = protG+'g';
+    document.getElementById('mac-carb-v').textContent   = Math.max(0,carbG)+'g';
+    document.getElementById('mac-fat-v').textContent    = fatG+'g';
+    document.getElementById('mac-kcal-v').textContent   = targetKcal.toLocaleString()+' kcal';
+
+    const timelines = {
+      cut: [
+        { phase:'Phase 1 (Weeks 1–4)',   color:'var(--bulk)',    detail:`Enter a 400–500 kcal daily deficit. Eat ${protG}g protein/day. Do 3–4 strength sessions + 2 cardio sessions weekly. Monitor scale weekly.` },
+        { phase:'Phase 2 (Weeks 5–10)',  color:'var(--accent4)', detail:'Reassess at week 4. If losing 0.3–0.5 kg/week, continue. If stalled, add 1 cardio session or reduce 100 kcal. Stay consistent with strength training to preserve muscle.' },
+        { phase:'Phase 3 (Weeks 11–16)', color:'var(--lean)',    detail:`Final push to ${targetBF}. Consider a 1-week diet break at maintenance calories to reset leptin and reduce fatigue. Then finish the cut strong.` },
+        { phase:'Transition',            color:'var(--accent)',  detail:'Once you hit your target body fat, slowly reverse diet up to maintenance over 2 weeks before beginning a lean bulk. Do not jump straight into a large surplus.' }
+      ],
+      lean_bulk: [
+        { phase:'Phase 1 (Weeks 1–4)',  color:'var(--lean)',    detail:`Eat at +200 kcal above TDEE (${tdee+200} kcal total). Hit ${protG}g protein daily. Track weight — aim for +0.1–0.2 kg/week gain.` },
+        { phase:'Phase 2 (Months 2–4)', color:'var(--accent2)', detail:'Increase training volume — add 1–2 sets per muscle group per week. If weight gain exceeds 0.3 kg/week, reduce surplus slightly. Keep body fat in check.' },
+        { phase:'Phase 3 (Months 4–6)', color:'var(--accent)',  detail:`Continue the lean bulk until body fat reaches ${gender==='male'?'17–18%':'26–28%'}. At that point, take a short mini-cut (4–6 weeks) to re-sensitise your body.` },
+        { phase:'Long Term',            color:'var(--accent5)', detail:'Repeat the lean bulk / mini-cut cycle. Each cycle builds more muscle and finishes leaner. This is the most sustainable path to an athletic physique.' }
+      ],
+      recomp: [
+        { phase:'Phase 1 (Weeks 1–4)',  color:'var(--accent4)', detail:`Eat at maintenance (${tdee} kcal). Hit ${protG}g protein minimum daily. Begin progressive overload training 4x/week. This is the foundation.` },
+        { phase:'Phase 2 (Months 2–3)', color:'var(--accent)',  detail:'Increase training intensity. On training days, eat slightly above maintenance (+100–150 kcal). On rest days, eat slightly below (−100–150 kcal). This cycles calories for better results.' },
+        { phase:'Phase 3 (Months 4–6)', color:'var(--lean)',    detail:'Reassess body composition. If scale weight is stable but you look leaner and stronger — recomp is working. Continue or transition to a lean bulk for accelerated muscle growth.' },
+        { phase:'Review',               color:'var(--accent2)', detail:'After 3–4 months, decide: if body fat is below 15% (M) / 23% (F), enter a lean bulk. If above target, continue recomp or do a short cut.' }
+      ],
+      bulk: [
+        { phase:'Phase 1 (Weeks 1–4)',   color:'var(--accent2)', detail:`Gradually increase calories to ${targetKcal} kcal (+300–400 above TDEE). Prioritise compound lifts: squat, deadlift, bench, overhead press. Log all workouts.` },
+        { phase:'Phase 2 (Months 2–4)',  color:'var(--lean)',    detail:'Add 1–2 sets per exercise each month (progressive overload). Target 0.2–0.4 kg weight gain per week. Track body fat monthly with a tape measure.' },
+        { phase:'Phase 3 (Months 4–6)',  color:'var(--accent4)', detail:`Bulk until body fat reaches ${gender==='male'?'17–18%':'26–28%'}, then transition into a lean cut to strip fat while keeping the muscle you built.` },
+        { phase:'Long Term',             color:'var(--bulk)',    detail:'Repeat bulk/cut cycles, each time ending the bulk at slightly less body fat than the last. With each cycle, you build a leaner, more muscular physique.' }
+      ]
+    };
+
+    const tlRows = timelines[phase];
+    document.getElementById('tl-title').textContent = '📅 ' + vd.tag.split(' Recommended')[0] + ' — Phase Plan';
+    document.getElementById('tl-content').innerHTML = tlRows.map((r,i) => `
+      <div class="tl-row">
+        <div class="tl-left">
+          <div class="tl-dot" style="background:${r.color}22;border-color:${r.color};color:${r.color};">${i+1}</div>
+          ${i < tlRows.length-1 ? '<div class="tl-line"></div>' : ''}
+        </div>
+        <div class="tl-body">
+          <div class="tl-phase">${r.phase}</div>
+          <div class="tl-detail">${r.detail}</div>
+        </div>
+      </div>`).join('');
+
+    const checklists = {
+      cut: [
+        { icon:'🍳', text:`Eat ${protG}g of protein daily — the #1 priority to preserve muscle on a cut` },
+        { icon:'⚖️', text:'Track calories with a food scale for at least the first 2 weeks to calibrate your intake' },
+        { icon:'🏋️', text:'Maintain your strength training — do not drop to just cardio or you will lose muscle mass' },
+        { icon:'💧', text:'Drink 3L of water daily — dehydration is often mistaken for hunger on a cut' },
+        { icon:'😴', text: goodSleep ? "You're sleeping well — keep it up. Sleep directly impacts fat loss hormones" : 'Improve your sleep to 7–9 hours. Poor sleep raises cortisol and slows fat loss' },
+        { icon:'📊', text:'Weigh yourself every morning and track a 7-day average — ignore daily fluctuations' }
+      ],
+      lean_bulk: [
+        { icon:'📈', text:'Aim for +0.1–0.25 kg of scale weight gain per week — slower means leaner muscle gain' },
+        { icon:'💪', text:'Progressive overload is non-negotiable — add weight or reps to each lift every 1–2 weeks' },
+        { icon:'🍳', text:`Hit ${protG}g of protein daily minimum — your lean mass needs it to grow` },
+        { icon:'🚫', text:'Avoid "dirty bulking" — a small, clean surplus gives the same muscle gain with far less fat' },
+        { icon:'📊', text:'Measure waist every 2 weeks — if waist grows more than 1 cm/month, reduce the surplus' },
+        { icon:'😴', text:'Sleep 8+ hours — 60–70% of muscle growth hormone (GH) is released during deep sleep' }
+      ],
+      recomp: [
+        { icon:'⚖️', text:`Eat exactly at maintenance (${tdee} kcal) — not above, not below on average` },
+        { icon:'🍳', text:`${protG}g of protein is your daily non-negotiable — it fuels muscle synthesis on a recomp` },
+        { icon:'🏋️', text:'Train with progressive overload 4x/week — recomp only works with a strong training stimulus' },
+        { icon:'📸', text:'Take monthly progress photos — the scale may barely move but your physique will change' },
+        { icon:'⏳', text:'Be patient — recomp takes 3–6 months to show visible results. Trust the process' },
+        { icon:'💧', text:'Stay hydrated and prioritise sleep — both are critical for the dual fat loss + muscle gain process' }
+      ],
+      bulk: [
+        { icon:'📈', text:`Eat at ${targetKcal} kcal/day — a controlled surplus builds muscle with minimal excess fat` },
+        { icon:'🍳', text:`${protG}g of protein per day is your baseline — enough to maximise muscle protein synthesis` },
+        { icon:'🏋️', text:'Focus on compound movements: squat, deadlift, bench press, overhead press, and rows' },
+        { icon:'📊', text:`Monitor body fat monthly. If you exceed ${gender==='male'?'18%':'28%'}, transition to a mini-cut immediately` },
+        { icon:'💤', text:'Sleep is when you grow — 8–9 hours per night. Growth hormone peaks during deep sleep' },
+        { icon:'📝', text:'Log every workout. Track PRs, not just the scale — strength gains confirm muscle growth' }
+      ]
+    };
+
+    document.getElementById('cl-title').textContent = '✅ Your ' + vd.tag.split(' Recommended')[0] + ' Action Checklist';
+    document.getElementById('cl-content').innerHTML = checklists[phase].map(c => `
+      <div class="check-li">
+        <span class="cl-icon">${c.icon}</span>
+        <span class="cl-text">${c.text}</span>
+      </div>`).join('');
+  }
+
+  analyse();
+</script>
+</body>
+</html>

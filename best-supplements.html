@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Corelytics.NUTRITION — Live Soon</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:      #09090b;
+    --surface: #111115;
+    --border:  rgba(255,255,255,0.06);
+    --orange:  #ff6b1a;
+    --orange2: #ff8f4d;
+    --orange-glow: rgba(255,107,26,0.18);
+    --text:    #f0ede8;
+    --muted:   #5a5560;
+    --card-bg: rgba(255,255,255,0.025);
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* NOISE OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 999;
+    opacity: 0.45;
+  }
+
+  /* AMBIENT BLOBS */
+  .blob {
+    position: fixed;
+    pointer-events: none;
+    z-index: 0;
+    border-radius: 50%;
+    filter: blur(1px);
+  }
+  .blob-1 {
+    top: -180px; left: -120px;
+    width: 650px; height: 650px;
+    background: radial-gradient(circle, rgba(255,107,26,0.09) 0%, transparent 68%);
+  }
+  .blob-2 {
+    bottom: -200px; right: -160px;
+    width: 700px; height: 700px;
+    background: radial-gradient(circle, rgba(255,107,26,0.06) 0%, transparent 68%);
+  }
+  .blob-3 {
+    top: 40%; left: 50%;
+    transform: translate(-50%, -50%);
+    width: 900px; height: 400px;
+    background: radial-gradient(ellipse, rgba(255,107,26,0.04) 0%, transparent 65%);
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    background: rgba(9,9,11,0.88);
+    backdrop-filter: blur(22px);
+    -webkit-backdrop-filter: blur(22px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 6vw;
+  }
+
+  .logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 1.45rem;
+    letter-spacing: -0.03em;
+    text-decoration: none;
+    line-height: 1;
+  }
+  .logo .core { color: #ffffff; }
+  .logo .nutrition { color: var(--orange); }
+
+  .nav-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(255,107,26,0.10);
+    border: 1px solid rgba(255,107,26,0.25);
+    border-radius: 100px;
+    padding: 5px 14px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--orange);
+  }
+
+  .nav-badge .dot {
+    width: 6px; height: 6px;
+    background: var(--orange);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  /* TICKER */
+  .nav-ticker {
+    border-top: 1px solid var(--border);
+    overflow: hidden;
+    position: relative;
+    background: rgba(255,255,255,0.012);
+  }
+  .nav-ticker::before,
+  .nav-ticker::after {
+    content: '';
+    position: absolute;
+    top: 0; bottom: 0;
+    width: 80px;
+    z-index: 2;
+    pointer-events: none;
+  }
+  .nav-ticker::before { left: 0;  background: linear-gradient(to right, rgba(9,9,11,0.95), transparent); }
+  .nav-ticker::after  { right: 0; background: linear-gradient(to left,  rgba(9,9,11,0.95), transparent); }
+
+  .ticker-track {
+    display: flex;
+    width: max-content;
+    animation: ticker-scroll 28s linear infinite;
+    user-select: none;
+  }
+  @keyframes ticker-scroll {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+  }
+  .ticker-track:hover { animation-play-state: paused; }
+
+  .t-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 18px;
+    white-space: nowrap;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--muted);
+    border-right: 1px solid var(--border);
+    transition: color 0.2s;
+    flex-shrink: 0;
+  }
+  .t-item:hover { color: var(--orange); }
+
+  /* MAIN STAGE */
+  .stage {
+    position: relative;
+    z-index: 1;
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 140px 6vw 80px;
+    min-height: 100vh;
+  }
+
+  /* PRE-BADGE */
+  .pre-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,107,26,0.08);
+    border: 1px solid rgba(255,107,26,0.22);
+    border-radius: 100px;
+    padding: 6px 18px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--orange);
+    margin-bottom: 36px;
+    animation: fadeUp 0.8s ease both;
+  }
+  .pre-badge .dot {
+    width: 6px; height: 6px;
+    background: var(--orange);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); box-shadow: 0 0 0 0 rgba(255,107,26,0.5); }
+    50% { opacity: 0.5; transform: scale(0.8); box-shadow: 0 0 0 0 transparent; }
+  }
+
+  /* BRAND LOGOTYPE */
+  .brand-logotype {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: clamp(3.2rem, 9vw, 8rem);
+    letter-spacing: -0.05em;
+    line-height: 0.95;
+    margin-bottom: 16px;
+    animation: fadeUp 0.8s 0.08s ease both;
+    position: relative;
+  }
+  .brand-logotype .core-part { color: #ffffff; }
+  .brand-logotype .dot-part  { color: rgba(255,255,255,0.35); }
+  .brand-logotype .nutr-part {
+    color: var(--orange);
+    position: relative;
+  }
+  .brand-logotype .nutr-part::after {
+    content: '';
+    position: absolute;
+    bottom: -4px; left: 0; right: 0;
+    height: 3px;
+    border-radius: 100px;
+    background: linear-gradient(90deg, var(--orange), var(--orange2), transparent);
+    opacity: 0.7;
+  }
+
+  /* LIVE SOON HEADLINE */
+  .live-soon-wrap {
+    margin-bottom: 28px;
+    animation: fadeUp 0.8s 0.16s ease both;
+  }
+
+  .live-soon-text {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.1rem, 3vw, 1.6rem);
+    font-weight: 700;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 14px;
+  }
+
+  .live-soon-text .ls-line {
+    width: 48px; height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,107,26,0.4));
+  }
+  .live-soon-text .ls-line.right {
+    background: linear-gradient(90deg, rgba(255,107,26,0.4), transparent);
+  }
+
+  /* DESCRIPTION */
+  .desc {
+    font-size: 1rem;
+    color: var(--muted);
+    font-weight: 300;
+    max-width: 480px;
+    line-height: 1.8;
+    margin-bottom: 44px;
+    animation: fadeUp 0.8s 0.22s ease both;
+  }
+
+  /* NOTIFY FORM */
+  .notify-form {
+    display: flex;
+    gap: 10px;
+    max-width: 420px;
+    width: 100%;
+    margin: 0 auto 56px;
+    animation: fadeUp 0.8s 0.34s ease both;
+  }
+
+  .notify-input {
+    flex: 1;
+    background: var(--card-bg);
+    border: 1.5px solid var(--border);
+    border-radius: 100px;
+    padding: 13px 20px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+  }
+  .notify-input::placeholder { color: var(--muted); }
+  .notify-input:focus {
+    border-color: rgba(255,107,26,0.4);
+    box-shadow: 0 0 0 3px rgba(255,107,26,0.06);
+  }
+
+  .notify-btn {
+    background: var(--orange);
+    color: #fff;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 700;
+    font-size: 0.875rem;
+    padding: 13px 24px;
+    border-radius: 100px;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: opacity 0.2s, transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 0 30px rgba(255,107,26,0.3);
+  }
+  .notify-btn:hover {
+    opacity: 0.88;
+    transform: translateY(-1px);
+    box-shadow: 0 0 44px rgba(255,107,26,0.45);
+  }
+  .notify-btn:active { transform: translateY(0); }
+
+  /* FEATURE PILLS */
+  .feature-pills {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    margin-bottom: 64px;
+    animation: fadeUp 0.8s 0.4s ease both;
+  }
+
+  .fpill {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 16px;
+    border-radius: 100px;
+    font-size: 0.78rem;
+    font-weight: 500;
+    color: var(--muted);
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    transition: border-color 0.2s, color 0.2s;
+  }
+  .fpill:hover { border-color: rgba(255,107,26,0.3); color: var(--orange); }
+  .fpill .fi { font-size: 0.9rem; }
+
+  /* BOTTOM FOOTER */
+  .bottom-bar {
+    position: relative;
+    z-index: 1;
+    border-top: 1px solid var(--border);
+    padding: 20px 6vw;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--muted);
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .bottom-bar .b-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 0.9rem;
+    letter-spacing: -0.02em;
+  }
+  .bottom-bar .b-logo .core { color: #fff; }
+  .bottom-bar .b-logo .nutr { color: var(--orange); }
+
+  /* ANIMATIONS */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ORANGE RING ANIMATION */
+  .ring-wrap {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+    overflow: hidden;
+    z-index: 0;
+  }
+
+  .ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid rgba(255,107,26,0.08);
+    animation: ringExpand 4s ease-in-out infinite;
+  }
+  .ring:nth-child(1) { width: 300px;  height: 300px;  animation-delay: 0s; }
+  .ring:nth-child(2) { width: 500px;  height: 500px;  animation-delay: 0.8s; }
+  .ring:nth-child(3) { width: 720px;  height: 720px;  animation-delay: 1.6s; }
+  .ring:nth-child(4) { width: 960px;  height: 960px;  animation-delay: 2.4s; }
+
+  @keyframes ringExpand {
+    0%   { opacity: 0.5; transform: scale(0.96); }
+    50%  { opacity: 0.2; transform: scale(1); }
+    100% { opacity: 0.5; transform: scale(0.96); }
+  }
+
+  /* SUCCESS STATE */
+  .success-msg {
+    display: none;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: var(--orange);
+    font-weight: 500;
+    margin-top: 6px;
+    justify-content: center;
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 600px) {
+    .notify-form { flex-direction: column; border-radius: 20px; }
+    .notify-input, .notify-btn { border-radius: 100px; }
+    .brand-logotype { font-size: clamp(2.8rem, 14vw, 5rem); }
+    .bottom-bar { justify-content: center; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- BLOBS -->
+<div class="blob blob-1"></div>
+<div class="blob blob-2"></div>
+<div class="blob blob-3"></div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="logo">
+      <span class="core">Corelytics</span><span class="nutrition">.NUTRITION</span>
+    </a>
+    <div class="nav-badge">
+      <div class="dot"></div>
+      Launching Soon
+    </div>
+  </div>
+
+  <!-- TICKER -->
+  <div class="nav-ticker">
+    <div class="ticker-track">
+      <span class="t-item">🥗 AI Meal Plans</span>
+      <span class="t-item">🔥 Calorie Tracking</span>
+      <span class="t-item">🧬 Macro Intelligence</span>
+      <span class="t-item">💊 Supplement Guide</span>
+      <span class="t-item">🍽️ Smart Recipes</span>
+      <span class="t-item">📊 Nutrient Analytics</span>
+      <span class="t-item">🥩 Protein Optimiser</span>
+      <span class="t-item">💧 Hydration Tracker</span>
+      <span class="t-item">⚡ Energy Balance</span>
+      <span class="t-item">🎯 Goal-Based Dieting</span>
+      <span class="t-item">🥗 AI Meal Plans</span>
+      <span class="t-item">🔥 Calorie Tracking</span>
+      <span class="t-item">🧬 Macro Intelligence</span>
+      <span class="t-item">💊 Supplement Guide</span>
+      <span class="t-item">🍽️ Smart Recipes</span>
+      <span class="t-item">📊 Nutrient Analytics</span>
+      <span class="t-item">🥩 Protein Optimiser</span>
+      <span class="t-item">💧 Hydration Tracker</span>
+      <span class="t-item">⚡ Energy Balance</span>
+      <span class="t-item">🎯 Goal-Based Dieting</span>
+    </div>
+  </div>
+</nav>
+
+<!-- RING ANIMATION -->
+<div class="ring-wrap">
+  <div class="ring"></div>
+  <div class="ring"></div>
+  <div class="ring"></div>
+  <div class="ring"></div>
+</div>
+
+<!-- MAIN STAGE -->
+<main class="stage">
+
+  <!-- PRE-BADGE -->
+  <div class="pre-badge">
+    <div class="dot"></div>
+    Something Big Is Coming
+  </div>
+
+  <!-- BRAND LOGOTYPE -->
+  <div class="brand-logotype">
+    <span class="core-part">Corelytics</span><span class="dot-part">.</span><span class="nutr-part">NUTRITION</span>
+  </div>
+
+  <!-- LIVE SOON -->
+  <div class="live-soon-wrap">
+    <div class="live-soon-text">
+      <span class="ls-line"></span>
+      Going Live Soon
+      <span class="ls-line right"></span>
+    </div>
+  </div>
+
+  <!-- DESC -->
+  <p class="desc">
+    Corelytics.NUTRITION is our most powerful module yet — AI-driven meal planning, real-time macro tracking, supplement intelligence, and personalised nutrition strategies built around your exact goals.
+  </p>
+
+  <!-- NOTIFY FORM -->
+  <div class="notify-form">
+    <input class="notify-input" id="email-input" type="email" placeholder="Enter your email for early access" />
+    <button class="notify-btn" onclick="handleNotify()">Notify Me →</button>
+  </div>
+  <div class="success-msg" id="success-msg">
+    ✅ You're on the list! We'll notify you on launch day.
+  </div>
+
+  <!-- FEATURE PILLS -->
+  <div class="feature-pills">
+    <div class="fpill"><span class="fi">🥗</span> AI Meal Builder</div>
+    <div class="fpill"><span class="fi">🔥</span> Calorie Engine</div>
+    <div class="fpill"><span class="fi">🧬</span> Macro Tracking</div>
+    <div class="fpill"><span class="fi">💊</span> Supplement Stack</div>
+    <div class="fpill"><span class="fi">📊</span> Nutrient Analytics</div>
+    <div class="fpill"><span class="fi">🎯</span> Goal Dieting</div>
+  </div>
+
+</main>
+
+<!-- BOTTOM BAR -->
+<footer class="bottom-bar">
+  <div class="b-logo"><span class="core">Corelytics</span><span class="nutr">.NUTRITION</span></div>
+  <span>© 2025 Corelytics. All rights reserved.</span>
+  <a href="index.html" style="color:var(--muted);text-decoration:none;transition:color 0.2s;" onmouseover="this.style.color='var(--orange)'" onmouseout="this.style.color='var(--muted)'">← Back to Corelytics</a>
+</footer>
+
+<script>
+  function handleNotify() {
+    const input = document.getElementById('email-input');
+    const msg   = document.getElementById('success-msg');
+    if (!input.value || !input.value.includes('@')) {
+      input.style.borderColor = 'rgba(255,107,26,0.7)';
+      input.focus();
+      setTimeout(() => input.style.borderColor = '', 1200);
+      return;
+    }
+    input.style.display = 'none';
+    document.querySelector('.notify-btn').style.display = 'none';
+    msg.style.display = 'flex';
+  }
+</script>
+</body>
+</html>
